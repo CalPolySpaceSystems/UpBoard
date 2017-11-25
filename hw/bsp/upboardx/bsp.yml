@@ -1,0 +1,4 @@
+bsp.arch: cortex_m4
+bsp.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m4"
+bsp.linkerscript:
+    - "hw/mcu/atmel/samd3x8/samd3x8.ld"
