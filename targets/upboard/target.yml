@@ -1,0 +1,3 @@
+### Target: targets/upboard
+target.app: "@upboard/apps/upboard"
+target.bsp: "@upboard/hw/bsp/upboardx"
