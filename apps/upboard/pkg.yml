@@ -1,0 +1,9 @@
+pkg.name: apps/upboard
+pkg.type: app
+pkg.description: Basic example application which blinks an LED.
+
+pkg.deps:
+    - "@apache-mynewt-core/kernel/os"
+    - "@apache-mynewt-core/hw/hal"
+    - "@apache-mynewt-core/sys/console/full"
+    - "@apache-mynewt-core/sys/shell"
