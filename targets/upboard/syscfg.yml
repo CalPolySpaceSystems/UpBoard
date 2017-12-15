@@ -1,2 +1,4 @@
-TEST3
-TEST
+### Package: targets/upboard
+
+syscfg.vals:
+    BSP_UPBOARD_X: "1"
