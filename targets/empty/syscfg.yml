@@ -1,0 +1,4 @@
+### Package: targets/empty
+
+syscfg.vals:
+    BSP_UPBOARD_X: "1"

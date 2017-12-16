@@ -1,0 +1,5 @@
+### Package: targets/arduino_boot
+pkg.name: "targets/bootloader"
+pkg.type: "target"
+
+

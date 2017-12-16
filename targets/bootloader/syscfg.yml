@@ -1,0 +1,4 @@
+### Package: targets/arduino_boot
+
+syscfg.vals:
+    BSP_UPBOARD_X: "1"

@@ -1,0 +1,4 @@
+### Target: targets/arduino_boot
+target.app: "@apache-mynewt-core/apps/boot"
+target.bsp: "@upboard/hw/bsp/upboardx"
+target.build_profile: "optimized"

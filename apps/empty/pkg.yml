@@ -1,0 +1,6 @@
+pkg.name: apps/empty
+pkg.type: app
+pkg.description: Empty application with no functionality to test compiling
+
+pkg.deps:
+    - "@apache-mynewt-core/kernel/os"
