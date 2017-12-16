@@ -10,4 +10,3 @@ pkg.deps:
 pkg.cflags:
     - -mthumb
     - -D__SAM3X8E__
-
