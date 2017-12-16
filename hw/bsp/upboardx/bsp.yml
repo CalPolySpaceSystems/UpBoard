@@ -1,4 +1,44 @@
-bsp.arch: cortex_m4
-bsp.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m4"
+bsp.arch: cortex_m3
+bsp.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m3"
 bsp.linkerscript:
+    - "hw/bsp/upboardx/upboardx.ld"
     - "hw/mcu/atmel/samd3x8/samd3x8.ld"
+bsp.linkerscript.BOOT_LOADER.OVERWRITE:
+    - "hw/bsp/upboardx/upboardx_boot.ld"
+    - "hw/mcu/atmel/samd3x8/samd3x8.ld"
+
+# Note(Joshua): I just copied these from the samd21
+# If we need more space, this can easily be expanded.
+# Just make sure to keep everything aligned on the 256 bit
+# pages.
+bsp.flash_map:
+    areas:
+        # System areas.
+        FLASH_AREA_BOOTLOADER:
+            device: 0
+            offset: 0x00000000
+            size: 48kB
+        FLASH_AREA_IMAGE_0:
+            device: 0
+            offset: 0x0000c000
+            size: 96kB
+        FLASH_AREA_IMAGE_1:
+            device: 0
+            offset: 0x00024000
+            size: 96kB
+        FLASH_AREA_IMAGE_SCRATCH:
+            device: 0
+            offset: 0x0003c000
+            size: 7kB
+
+        # User areas.
+        FLASH_AREA_REBOOT_LOG:
+            user_id: 0
+            device: 0
+            offset: 0x0003dc00
+            size: 1kB
+        FLASH_AREA_NFFS:
+            user_id: 1
+            device: 0
+            offset: 0x0003e000
+            size: 8kB

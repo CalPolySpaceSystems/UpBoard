@@ -45,23 +45,24 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 SEARCH_DIR(.)
 
-/* Memory Spaces Definitions */
-MEMORY
-{
-	rom (rx)    : ORIGIN = 0x00080000, LENGTH = 0x00080000 /* Flash, 512K */
-	sram0 (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00008000 /* sram0, 32K */
-	sram1 (rwx) : ORIGIN = 0x20080000, LENGTH = 0x00008000 /* sram1, 32K */
-	ram (rwx)   : ORIGIN = 0x20078000, LENGTH = 0x00010000 /* sram, 64K */
-/*	ram (rwx)   : ORIGIN = ORIGIN( sram1 )-LENGTH( sram0 ), LENGTH = LENGTH( sram0 )+LENGTH( sram1 ) */ /* sram, 64K */
-}
+/* Generate a link error if heap and stack don't fit into RAM */
+_Min_Heap_Size = 0x200;      /* required amount of heap  */
+_Min_Stack_Size = 0x200; /* required amount of stack */
+
 
 /* The stack size used by the application. NOTE: you need to adjust  */
-__stack_size__ = DEFINED(__stack_size__) ? __stack_size__ : 0x2000;
-__ram_end__ = ORIGIN(ram) + LENGTH(ram) - 4;
+STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE : DEFINED(__stack_size__) ? __stack_size__ : 0x400;
+
+ENTRY(Reset_Handler)
 
 /* Section Definitions */
 SECTIONS
 {
+    .imghdr (NOLOAD):
+    {
+        . = . + _imghdr_size;
+    } > FLASH
+
     .text :
     {
         . = ALIGN(4);
@@ -109,14 +110,14 @@ SECTIONS
 
         . = ALIGN(4);
         _efixed = .;            /* End of text section */
-    } > rom
+    } > FLASH
 
     /* .ARM.exidx is sorted, so has to go in its own output section.  */
     PROVIDE_HIDDEN (__exidx_start = .);
     .ARM.exidx :
     {
       *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-    } > rom
+    } > FLASH
     PROVIDE_HIDDEN (__exidx_end = .);
 
     . = ALIGN(4);
@@ -126,11 +127,10 @@ SECTIONS
     {
         . = ALIGN(4);
         _srelocate = .;
-        *(.ramfunc .ramfunc.*);
         *(.data .data.*);
         . = ALIGN(4);
         _erelocate = .;
-    } > ram
+    } > RAM AT > FLASH
 
     /* .bss section which is used for uninitialized data */
     .bss (NOLOAD) :
@@ -143,18 +143,42 @@ SECTIONS
         . = ALIGN(4);
         _ebss = . ;
         _ezero = .;
-    } > ram
+    } > RAM
 
-    /* stack section */
-    .stack (NOLOAD):
+    /* Heap starts after BSS */
+    __HeapBase = .;
+
+    /* User_heap_stack section, used to check that there is enough RAM left */
+    .heap :
     {
-        . = ALIGN(8);
-         _sstack = .;
-        . = . + __stack_size__;
-        . = ALIGN(8);
-        _estack = .;
-    } > ram
+        . = ALIGN(4);
+        PROVIDE ( _user_heap_start = . );
+        . = . + _Min_Heap_Size;
+        . = ALIGN(4);
+    } > RAM
 
-    . = ALIGN(4);
-    _end = . ;
+    /* .stack_dummy section doesn't contains any symbols. It is only
+     * used for linker to calculate size of stack sections, and assign
+     * values to stack symbols later */
+    .stack_dummy (COPY):
+    {
+        . = . + STACK_SIZE;
+        *(.stack*)
+    } > RAM
+
+    _ram_start = ORIGIN(RAM);
+
+    /* Set stack top to end of RAM, and stack limit move down by
+     * size of stack_dummy section */
+    __StackTop = ORIGIN(RAM) + LENGTH(RAM);
+    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
+    PROVIDE(__stack = __StackTop);
+
+    /* Top of head is the bottom of the stack */
+    _user_heap_end = __StackLimit;
+    __HeapLimit = __StackLimit;
+
+
+    /* Check if data + heap + stack exceeds RAM limit */
+    ASSERT(__HeapBase <= __HeapLimit, "region RAM overflowed with stack")
 }

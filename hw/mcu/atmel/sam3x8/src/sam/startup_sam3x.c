@@ -216,6 +216,10 @@ void Reset_Handler(void)
 	/* Initialize the C library */
 	__libc_init_array();
 
+	/* Modification by Joshua... call SystemInit here */
+	/* Initialize the SAM3 system */
+	SystemInit();
+
 	/* Branch to main function */
 	main();
 

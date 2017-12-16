@@ -1,4 +1,4 @@
-#include <mcu/cortex_m0.h>
+#include <mcu/cortex_m3.h>
 #include "hal/hal_system.h"
 #include <stdlib.h>
 
@@ -12,7 +12,7 @@ void hal_system_reset(void)
             __asm__("bkpt");
         }
 
-           /* TODO: from the M0, investigate for M4 */
+           /* TODO: from the M0, investigate for M3 */
            /* Cortex-M0+ Core Debug Registers (DCB registers, SHCSR, and DFSR)
            are only accessible over DAP and not via processor. Therefore
            they are not covered by the Cortex-M0 header file. */
