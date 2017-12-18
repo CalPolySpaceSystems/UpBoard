@@ -23,7 +23,9 @@ void hal_system_reset(void)
 
 int hal_debugger_connected(void)
 {
-    return DSU->STATUSB.reg & DSU_STATUSB_DBGPRES;
+   /* TODO: Figure out how to detect debugger for the M3 */
+   /* return DSU->STATUSB.reg & DSU_STATUSB_DBGPRES; */
+   return 0;
 }
 
 uint32_t HAL_GetTick(void)
