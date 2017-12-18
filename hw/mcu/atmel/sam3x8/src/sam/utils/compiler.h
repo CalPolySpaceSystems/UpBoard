@@ -61,10 +61,11 @@
 #  include <intrinsics.h>
 #endif
 
-#include <parts.h>
-#include "preprocessor.h"
+/* Modification by Joshua */
+#include "../../common/utils/parts.h"
+#include "preprocessor/preprocessor.h"
 
-#include <io.h>
+#include "header_files/io.h"
 
 //_____ D E C L A R A T I O N S ____________________________________________
 
@@ -235,14 +236,15 @@
 
 /* Define OPTIMIZE_HIGH attribute */
 #if defined   ( __CC_ARM   ) /* Keil µVision 4 */
-#   define OPTIMIZE_HIGH _Pragma("O3") 
+#   define OPTIMIZE_HIGH _Pragma("O3")
 #elif defined ( __ICCARM__ ) /* IAR Ewarm 5.41+ */
 #   define OPTIMIZE_HIGH _Pragma("optimize=high")
 #elif defined (  __GNUC__  ) /* GCC CS3 2009q3-68 */
 #   define OPTIMIZE_HIGH __attribute__((optimize("s")))
 #endif
 
-#include "interrupt.h"
+/* Modification by Joshua */
+#include "../../common/utils/interrupt.h"
 
 /*! \name Usual Types
  */
@@ -817,7 +819,8 @@ typedef struct
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-#define min(a, b)   Min(a, b)
+/* Modification by Joshua */
+/*#define min(a, b)   Min(a, b)*/
 
 /*! \brief Takes the maximal value of \a a and \a b.
  *
@@ -828,7 +831,8 @@ typedef struct
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-#define max(a, b)   Max(a, b)
+/* Modification by Joshua */
+/*#define max(a, b)   Max(a, b)*/
 
 //! @}
 
@@ -864,7 +868,7 @@ typedef struct
 #define  LSB2W(u32)     MSB1W(u32)           //!< Least significant byte of 3rd rank of \a u32.
 #define  LSB1W(u32)     MSB2W(u32)           //!< Least significant byte of 2nd rank of \a u32.
 #define  LSB0W(u32)     MSB3W(u32)           //!< Least significant byte of 1st rank of \a u32.
-        
+
 #define  MSW(u64)       (((U32 *)&(u64))[1]) //!< Most significant word of \a u64.
 #define  LSW(u64)       (((U32 *)&(u64))[0]) //!< Least significant word of \a u64.
 #define  MSH0(u64)      (((U16 *)&(u64))[3]) //!< Most significant half-word of 1st rank of \a u64.

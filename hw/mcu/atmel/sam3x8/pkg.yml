@@ -1,4 +1,4 @@
-pkg.name: "hw/mcu/atmel/samd3x8"
+pkg.name: "hw/mcu/atmel/sam3x8"
 pkg.repository: https://github.com/CalPolySpaceSystems/UpBoard
 
 pkg.deps:

@@ -2,10 +2,10 @@ bsp.arch: cortex_m3
 bsp.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m3"
 bsp.linkerscript:
     - "hw/bsp/upboardx/upboardx.ld"
-    - "hw/mcu/atmel/samd3x8/samd3x8.ld"
+    - "hw/mcu/atmel/sam3x8/sam3x8.ld"
 bsp.linkerscript.BOOT_LOADER.OVERWRITE:
     - "hw/bsp/upboardx/upboardx_boot.ld"
-    - "hw/mcu/atmel/samd3x8/samd3x8.ld"
+    - "hw/mcu/atmel/sam3x8/sam3x8.ld"
 
 # Note(Joshua): I just copied these from the samd21
 # If we need more space, this can easily be expanded.

@@ -5,6 +5,6 @@ project.repositories:
 
 repository.apache-mynewt-core:
     type: github
-    vers: 1.2.0
-    user: apache
+    vers: 1-latest
+    user: CalPolySpaceSystems
     repo: mynewt-core

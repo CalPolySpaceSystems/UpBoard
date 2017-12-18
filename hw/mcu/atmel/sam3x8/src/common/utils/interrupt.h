@@ -46,7 +46,8 @@
 #ifndef UTILS_INTERRUPT_H
 #define UTILS_INTERRUPT_H
 
-#include <parts.h>
+/* Modification by Joshua */
+#include "parts.h"
 
 #if XMEGA || MEGA
 #  include "interrupt/interrupt_avr8.h"
