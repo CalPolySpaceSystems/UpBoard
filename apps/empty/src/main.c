@@ -22,6 +22,8 @@ int main(int argc, char **argv)
 #endif
 
     sysinit();
+    /* Debug breakpoint for testing */
+    __asm__("bkpt");
     assert(0);
 
     return rc;

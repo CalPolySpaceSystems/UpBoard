@@ -12,3 +12,5 @@ const struct hal_flash* hal_bsp_flash_dev(uint8_t id)
 
     return &sam3x8_flash_dev_1;
 }
+
+void hal_bsp_init(void) {}
