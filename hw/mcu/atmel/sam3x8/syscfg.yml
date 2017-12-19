@@ -4,6 +4,6 @@ syscfg.defs:
             Specifies the required alignment for internal flash writes.
             Used internally by the newt tool.
         # TODO: This is almost certainly wrong, since out flash chips have 256 bit pages,
-        # but it is also almost certainly wrong for the Zero as well, so let's see if this
+        # but it is also almost certainly wrong for the zero as well, so let's see if this
         # causes any issues
         value: 1
