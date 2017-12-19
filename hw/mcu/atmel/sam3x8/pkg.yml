@@ -20,6 +20,7 @@ pkg.cflags:
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/twi"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/efc"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/pmc"
+    - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/wdt"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/services/flash_efc"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/common/services/clock"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/common/services/clock/sam3x/module_config"
