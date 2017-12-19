@@ -57,7 +57,8 @@ extern uint32_t _erelocate;
 extern uint32_t _szero;
 extern uint32_t _ezero;
 extern uint32_t _sstack;
-extern uint32_t _estack;
+/* Modification by Joshua */
+extern uint32_t __StackTop;
 
 /** \cond DOXYGEN_SHOULD_SKIP_THIS */
 int main(void);
@@ -70,7 +71,8 @@ __attribute__ ((section(".vectors")))
 IntFunc exception_table[] = {
 
 	/* Configure Initial Stack Pointer, using linker-generated symbols */
-	(IntFunc) (&_estack),
+	/* Modfication by Joshua */
+	(IntFunc) (&__StackTop),
 	(void*) Reset_Handler,
 
 	(void*) NMI_Handler,
