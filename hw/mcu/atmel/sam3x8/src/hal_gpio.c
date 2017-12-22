@@ -23,9 +23,13 @@
 
 #include <assert.h>
 #include <compiler.h>
-#include "pio.h"
+#include "..\include\mcu\sam3x8.h"
+#include "sam\drivers\pio\pio.h"
+#include "sam\drivers\pio\pio_handler.h"
+#include "common\utils\parts.h"
 #include "extint.h"
 #include <stdint.h>
+
 
 // Input and output modes that you can't put as input arguments to PIO init in/out
 #define PIO_OUTPUT_MODE PIO_OPENDRAIN
@@ -43,7 +47,7 @@
  * is 32 - 63, port C is 64 - 95, and port D is 96 - 143;
  */
 
-#define PIO_PORT(pin)           (pin/32) // necessary?
+#define PIO_PORT(pin)           (pin/32)
 #define PIO_PIN(pin)            (pin % 144)
 
 #define GPIO_MAX_PORT   (3)
@@ -58,76 +62,6 @@ static const int valid_pins[GPIO_MAX_PORT + 1] =
 	0xffffffff, // Port B
 	0x8fffffff, // Port C
 	0x000004ff, // Port D
-};
-
-/*
- * TODO: Map from pin to external interrupt channel.
- */
-static const int8_t hal_gpio_pin_exti_tbl[] = {
-    0,  /* PA0 */
-    1,  /* PA1 */
-    2,  /* PA2 */
-    3,  /* PA3 */
-    4,  /* PA4 */
-    5,  /* PA5 */
-    6,  /* PA6 */
-    7,  /* PA7 */
-    -1, /* PA8 */ /* NMI */
-    9,  /* PA9 */
-    10, /* PA10 */
-    11, /* PA11 */
-    12, /* PA12 */
-    13, /* PA13 */
-    14, /* PA14 */
-    15, /* PA15 */
-    0,  /* PA16 */
-    1,  /* PA17 */
-    2,  /* PA18 */
-    3,  /* PA19 */
-    4,  /* PA20 */
-    5,  /* PA21 */
-    6,  /* PA22 */
-    7,  /* PA23 */
-    12, /* PA24 */
-    13, /* PA25 */
-    -1, /* PA26 */
-    15, /* PA27 */
-    8,  /* PA28 */
-    -1, /* PA29 */
-    10, /* PA30 */
-    11, /* PA31 */
-    0,  /* PB0 */
-    1,  /* PB1 */
-    2,  /* PB2 */
-    3,  /* PB3 */
-    4,  /* PB4 */
-    5,  /* PB5 */
-    6,  /* PB6 */
-    7,  /* PB7 */
-    8,  /* PB8 */
-    9,  /* PB9 */
-    10, /* PB10 */
-    11, /* PB11 */
-    12, /* PB12 */
-    13, /* PB13 */
-    14, /* PB14 */
-    15, /* PB15 */
-    0,  /* PB16 */
-    1,  /* PB17 */
-    -1, /* PB18 */
-    -1, /* PB19 */
-    -1, /* PB20 */
-    -1, /* PB21 */
-    6,  /* PB22 */
-    7,  /* PB23 */
-    -1, /* PB24 */
-    -1, /* PB25 */
-    -1, /* PB26 */
-    -1, /* PB27 */
-    -1, /* PB28 */
-    -1, /* PB29 */
-    14, /* PB30 */
-    15, /* PB31 */
 };
 
 /*
@@ -152,21 +86,39 @@ int hal_gpio_init_out(int pin, int val)
         return -1;
     }
 
-	// pio_type is output defaulting to off
-
 	// Define input pin as bitmask of a pin
 	uint32_t pio_mask = pio_get_pin_group_mask(pin);
+	
+	// Use arg "val" to decide if output is intitialized low or high
+	int pio_init_lvl;
 
-	pio_configure(pio_inst,PIO_OUTPUT_0,pio_mask,PIO_OUTPUT_MODE);
+	if (val) {
+		pio_init_lvl = PIO_OUTPUT_1;
+	}
+	else {
+		pio_init_lvl = PIO_OUTPUT_0;
+	}
 
-    hal_gpio_write(pin, val);
+	// Get the pointer to pio instance depending on the port
+	switch (port){
+	case 0:
+		pio_configure(PIOA, pio_init_lvl, pio_mask, PIO_DEFAULT);
+	case 1:
+		pio_configure(PIOB, pio_init_lvl, pio_mask, PIO_DEFAULT);
+	case 2:
+		pio_configure(PIOC, pio_init_lvl, pio_mask, PIO_DEFAULT);
+	case 3:
+		pio_configure(PIOD, pio_init_lvl, pio_mask, PIO_DEFAULT);
+	default:
+		return -1;
+	}
 
     return 0;
 }
 
 int hal_gpio_init_in(int pin, hal_gpio_pull_t pull)
 {
-
+	// Make sure pin is valid (uwu)
 	int port = PIO_PORT(pin);
 	int port_pin = PIO_PIN(pin);
 
@@ -178,12 +130,36 @@ int hal_gpio_init_in(int pin, hal_gpio_pull_t pull)
 		return -1;
 	}
 
-	// pio_type is input
+	// Pull type of input pin
+	int pio_pull;
+
+	switch (hal_gpio_pull) {
+	case: (HAL_GPIO_PULL_NONE)
+		pio_pull = PIO_DEFAULT;
+	case: (HAL_GPIO_PULL_UP)
+		pio_pull = PIO_PULLUP;
+	case: (HAL_GPIO_PULL_DOWN)
+		pio_pull = PIO_OPENDRAIN;
+	default:
+		return -1;
+	}
 
 	// Define input pin as bitmask of a pin
 	uint32_t pio_mask = pio_get_pin_group_mask(pin);
 
-	pio_configure(pio_inst, PIO_INPUT, pio_mask, PIO_INPUT_MODE);
+	// Get the pointer to pio instance depending on the port
+	switch (port) {
+	case 0:
+		pio_configure(PIOA, PIO_INPUT, pio_mask, pio_pull);
+	case 1:
+		pio_configure(PIOB, PIO_INPUT, pio_mask, pio_pull);
+	case 2:
+		pio_configure(PIOC, PIO_INPUT, pio_mask, pio_pull);
+	case 3:
+		pio_configure(PIOD, PIO_INPUT, pio_mask, pio_pull);
+	default:
+		return -1;
+	}
 
     return 0;
 }
@@ -197,28 +173,46 @@ int hal_gpio_init_in(int pin, hal_gpio_pull_t pull)
  *
  * @return int 0: low, 1: high
  */
-int hal_gpio_read(int pin)
-{
-    int rc;
-    int port = PIO_PORT(pin);
-    int port_pin = PIO_PIN(pin);
+int hal_gpio_read(int pin){
+	
+	int rc;
 
+	// Make sure pin is valid
+	int port = PIO_PORT(pin);
+	int port_pin = PIO_PIN(pin);
 
 	assert(port <= GPIO_MAX_PORT);
 	assert(((1 << port_pin) & valid_pins[port]) != 0);
 
+	// Define input pin as bitmask of a pin
 	uint32_t pio_mask = pio_get_pin_group_mask(pin);
 
-	// Determine whether pin is input or output
-	if ((*p_pio->PIO_OSR)& pio_mask){ // todo: where does the innst pointer come from?
-		rc = pio_get(pio_inst,PIO_OUTPUT_0, pio_mask);
+	// Determine whether pin is input or output 
+	uint32_t pio_dir;
+
+	if ((*p_pio->PIO_OSR)& pio_mask){
+		pio_dir = PIO_OUTPUT_0;
 	}
 
 	else {
-		rc = pio_get(pio_inst,PIO_INPUT, pio_mask);
+		pio_dir = PIO_INPUT;
 	}
 
-    return rc;
+	// Read from the pin with the correct settings
+	switch (port) {
+	case 0:
+		rc = pio_get(PIOA, pio_dir, pio_mask);
+	case 1:
+		rc = pio_get(PIOB, pio_dir, pio_mask);
+	case 2:
+		rc = pio_get(PIOC, pio_dir, pio_mask);
+	case 3:
+		rc = pio_get(PIOD, pio_dir, pio_mask);
+	default:
+		return -1;
+	}
+
+	return rc;
 }
 
 /**
@@ -231,10 +225,40 @@ int hal_gpio_read(int pin)
  */
 void hal_gpio_write(int pin, int val)
 {
+	// Get port
+	int port = PIO_PORT(pin);
+	int port_pin = PIO_PIN(pin);
+
+	// Get pinmask 
+	uint32_t pio_mask = pio_get_pin_group_mask(pin);
+
     if (val) {
-        port_pin_set_output_level(pin, true);
-    } else {
-        port_pin_set_output_level(pin, false);
+		switch (port) {
+		case 0:
+			rc = pio_set(PIOA, pio_mask);
+		case 1:
+			rc = pio_set(PIOB, pio_mask);
+		case 2:
+			rc = pio_set(PIOC, pio_mask);
+		case 3:
+			rc = pio_set(PIOD, pio_mask);
+		default:
+			return -1;
+		}
+    } 
+	else {
+		switch (port) {
+		case 0:
+			rc = pio_clear(PIOA, pio_mask);
+		case 1:
+			rc = pio_clear(PIOB, pio_mask);
+		case 2:
+			rc = pio_clear(PIOC, pio_mask);
+		case 3:
+			rc = pio_clear(PIOD, pio_mask);
+		default:
+			return -1;
+		}
     }
 }
 
@@ -258,7 +282,7 @@ int hal_gpio_toggle(int pin)
  * Interrupt handler for gpio.
  */
 static void hal_gpio_irq(void)
-{
+{/*
     int i;
     struct gpio_irq *irq;
 
@@ -270,14 +294,14 @@ static void hal_gpio_irq(void)
                 irq->func(irq->arg);
             }
         }
-    }
+    }*/
 }
 
 /*
  * Validate pin, and return extint channel pin belongs to.
  */
 static int hal_gpio_irq_eic(int pin)
-{
+{/*
     int8_t eic;
     int port;
     int port_pin;
@@ -288,8 +312,9 @@ static int hal_gpio_irq_eic(int pin)
     if ((port_pin & valid_pins[port]) == 0) {
         return -1;
     }
-    eic = hal_gpio_pin_exti_tbl[pin];
+    eic = hal_gpio_pin_exti_tbl[pin]; // what is the channel of the pins
     return eic;
+	*/
 }
 
 /**
@@ -307,7 +332,7 @@ static int hal_gpio_irq_eic(int pin)
  */
 int hal_gpio_irq_init(	int pin, hal_gpio_irq_handler_t handler, void *arg,
 						hal_gpio_irq_trig_t trig, hal_gpio_pull_t pull)
-{
+{ /*
     struct extint_chan_conf cfg;
     int rc;
     int8_t eic;
@@ -317,7 +342,7 @@ int hal_gpio_irq_init(	int pin, hal_gpio_irq_handler_t handler, void *arg,
 
     extint_chan_get_config_defaults(&cfg);
 
-    /* Configure the gpio for an external interrupt */
+    /* Configure the gpio for an external interrupt *
     rc = 0;
     switch (trig) {
     case HAL_GPIO_TRIG_NONE:
@@ -378,7 +403,7 @@ int hal_gpio_irq_init(	int pin, hal_gpio_irq_handler_t handler, void *arg,
     hal_gpio_irqs[eic].arg = arg;
 
     extint_chan_set_config(eic, &cfg);
-    return 0;
+    return 0; */
 }
 
 /**
@@ -391,6 +416,7 @@ int hal_gpio_irq_init(	int pin, hal_gpio_irq_handler_t handler, void *arg,
  */
 void hal_gpio_irq_release(int pin)
 {
+	/*
     int8_t eic;
 
     eic = hal_gpio_irq_eic(pin);
@@ -399,6 +425,7 @@ void hal_gpio_irq_release(int pin)
     }
     hal_gpio_irq_disable(pin);
     hal_gpio_irqs[eic].func = NULL;
+	*/
 }
 
 /**
@@ -409,7 +436,7 @@ void hal_gpio_irq_release(int pin)
  * @param pin
  */
 void hal_gpio_irq_enable(int pin)
-{
+{/*
     int8_t eic;
 
     eic = hal_gpio_irq_eic(pin);
@@ -418,6 +445,7 @@ void hal_gpio_irq_enable(int pin)
     }
 
     extint_chan_enable_callback(eic, EXTINT_CALLBACK_TYPE_DETECT);
+	*/
 }
 
 /**
@@ -427,12 +455,12 @@ void hal_gpio_irq_enable(int pin)
  * @param pin
  */
 void hal_gpio_irq_disable(int pin)
-{
+{/*
     int8_t eic;
 
     eic = hal_gpio_irq_eic(pin);
     if (eic < 0) {
         return;
     }
-    extint_chan_disable_callback(eic, EXTINT_CALLBACK_TYPE_DETECT);
+    extint_chan_disable_callback(eic, EXTINT_CALLBACK_TYPE_DETECT);*/
 }
