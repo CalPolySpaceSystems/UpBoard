@@ -55,18 +55,25 @@ main(int argc, char **argv)
     sysinit();
 
     g_led_pin = LED_BLINK_PIN;
-    hal_gpio_init_out(g_led_pin, 1);
+    int ret = hal_gpio_init_out(g_led_pin, 1);
+
+	if ret = -1{
+		/* Debug breakpoint for testing */
+		__asm__("error");
+		assert(0);
+	}
 
     while (1) {
         ++g_task1_loops;
 
-        /* Wait one second */
-        os_time_delay(OS_TICKS_PER_SEC);
+        /* Wait 0.1 second */
+        os_time_delay(100);
 
         /* Toggle the LED */
         hal_gpio_toggle(g_led_pin);
     }
-    assert(0);
+
+	assert(0);
 
     return rc;
 }
