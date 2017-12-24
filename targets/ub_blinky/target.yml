@@ -1,0 +1,4 @@
+### Target: targets/ub_blinky
+target.app: "apps/blinky"
+target.bsp: "hw/bsp/upboardx"
+target.build_profile: "debug"

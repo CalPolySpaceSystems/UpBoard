@@ -2,9 +2,17 @@
 #include <string.h>
 
 #include "sysinit/sysinit.h"
+#include "os/os.h"
+#include "bsp/bsp.h"
+#include "hal/hal_gpio.h"
 #ifdef ARCH_sim
 #include "mcu/mcu_sim.h"
 #endif
+
+static volatile int g_task1_loops;
+
+/* For LED toggling */
+int g_led_pin = 58;
 
 /**
  * main
@@ -22,9 +30,22 @@ int main(int argc, char **argv)
 #endif
 
     sysinit();
+
+    hal_gpio_init_out(g_led_pin, 1);
+
+    while (1) {
+        ++g_task1_loops;
+
+        /* Wait one second */
+        os_time_delay(OS_TICKS_PER_SEC);
+
+        /* Toggle the LED */
+        hal_gpio_toggle(g_led_pin);
+    }
+
     /* Debug breakpoint for testing */
-    __asm__("bkpt");
-    assert(0);
+    //__asm__("bkpt");
+    //assert(0);
 
     return rc;
 }

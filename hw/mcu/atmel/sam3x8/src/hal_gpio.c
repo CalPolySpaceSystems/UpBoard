@@ -23,11 +23,11 @@
 
 #include <assert.h>
 #include <compiler.h>
-#include "..\include\mcu\sam3x8.h"
-#include "sam\drivers\pio\pio.h"
-#include "sam\drivers\pio\pio_handler.h"
-#include "common\utils\parts.h"
-#include "extint.h"
+#include <sam3x8.h>
+#include "sam/drivers/pio/pio.h"
+//#include "/sam/drivers/pio/pio_handler.h"
+//#include "common\utils\parts.h"
+//#include <extint.h>
 #include <stdint.h>
 
 
@@ -66,12 +66,12 @@ static const int valid_pins[GPIO_MAX_PORT + 1] =
 
 /*
  * Registered interrupt handlers.
- */
+ *
 struct gpio_irq {
     hal_gpio_irq_handler_t func;
     void *arg;
 } hal_gpio_irqs[EIC_NUMBER_OF_INTERRUPTS];
-
+*/
 int hal_gpio_init_out(int pin, int val)
 {
 
@@ -133,12 +133,12 @@ int hal_gpio_init_in(int pin, hal_gpio_pull_t pull)
 	// Pull type of input pin
 	int pio_pull;
 
-	switch (hal_gpio_pull) {
-	case: (HAL_GPIO_PULL_NONE)
+	switch (pull) {
+	case (HAL_GPIO_PULL_NONE):
 		pio_pull = PIO_DEFAULT;
-	case: (HAL_GPIO_PULL_UP)
+	case (HAL_GPIO_PULL_UP):
 		pio_pull = PIO_PULLUP;
-	case: (HAL_GPIO_PULL_DOWN)
+	case (HAL_GPIO_PULL_DOWN):
 		pio_pull = PIO_OPENDRAIN;
 	default:
 		return -1;
@@ -190,13 +190,13 @@ int hal_gpio_read(int pin){
 	// Determine whether pin is input or output 
 	uint32_t pio_dir;
 
-	if ((*p_pio->PIO_OSR)& pio_mask){
-		pio_dir = PIO_OUTPUT_0;
-	}
+	//if ((*p_pio->PIO_OSR)& pio_mask){
+	//	pio_dir = PIO_OUTPUT_0;
+	//}
 
-	else {
+	//else {
 		pio_dir = PIO_INPUT;
-	}
+	//}
 
 	// Read from the pin with the correct settings
 	switch (port) {
@@ -227,7 +227,7 @@ void hal_gpio_write(int pin, int val)
 {
 	// Get port
 	int port = PIO_PORT(pin);
-	int port_pin = PIO_PIN(pin);
+	//int port_pin = PIO_PIN(pin);
 
 	// Get pinmask 
 	uint32_t pio_mask = pio_get_pin_group_mask(pin);
@@ -235,31 +235,32 @@ void hal_gpio_write(int pin, int val)
     if (val) {
 		switch (port) {
 		case 0:
-			rc = pio_set(PIOA, pio_mask);
+			pio_set(PIOA, pio_mask);
 		case 1:
-			rc = pio_set(PIOB, pio_mask);
+			pio_set(PIOB, pio_mask);
 		case 2:
-			rc = pio_set(PIOC, pio_mask);
+			pio_set(PIOC, pio_mask);
 		case 3:
-			rc = pio_set(PIOD, pio_mask);
+			pio_set(PIOD, pio_mask);
 		default:
-			return -1;
+			return;
 		}
     } 
 	else {
 		switch (port) {
 		case 0:
-			rc = pio_clear(PIOA, pio_mask);
+			pio_clear(PIOA, pio_mask);
 		case 1:
-			rc = pio_clear(PIOB, pio_mask);
+			pio_clear(PIOB, pio_mask);
 		case 2:
-			rc = pio_clear(PIOC, pio_mask);
+			pio_clear(PIOC, pio_mask);
 		case 3:
-			rc = pio_clear(PIOD, pio_mask);
+			pio_clear(PIOD, pio_mask);
 		default:
-			return -1;
+			return;
 		}
     }
+
 }
 
 /**
@@ -276,191 +277,4 @@ int hal_gpio_toggle(int pin)
     pin_state = (hal_gpio_read(pin) == 0);
     hal_gpio_write(pin, pin_state);
     return hal_gpio_read(pin);
-}
-
-/*
- * Interrupt handler for gpio.
- */
-static void hal_gpio_irq(void)
-{/*
-    int i;
-    struct gpio_irq *irq;
-
-    for (i = 0; i < EIC_NUMBER_OF_INTERRUPTS; i++) {
-        if (extint_chan_is_detected(i)) {
-            extint_chan_clear_detected(i);
-            irq = &hal_gpio_irqs[i];
-            if (irq->func) {
-                irq->func(irq->arg);
-            }
-        }
-    }*/
-}
-
-/*
- * Validate pin, and return extint channel pin belongs to.
- */
-static int hal_gpio_irq_eic(int pin)
-{/*
-    int8_t eic;
-    int port;
-    int port_pin;
-
-    port = PIO_PORT(pin);
-    port_pin = PIO_PIN(pin);
-
-    if ((port_pin & valid_pins[port]) == 0) {
-        return -1;
-    }
-    eic = hal_gpio_pin_exti_tbl[pin]; // what is the channel of the pins
-    return eic;
-	*/
-}
-
-/**
- * gpio irq init
- *
- * Initialize an external interrupt on a gpio pin.
- *
- * @param pin       Pin number to enable gpio.
- * @param handler   Interrupt handler
- * @param arg       Argument to pass to interrupt handler
- * @param trig      Trigger mode of interrupt
- * @param pull      Push/pull mode of input.
- *
- * @return int
- */
-int hal_gpio_irq_init(	int pin, hal_gpio_irq_handler_t handler, void *arg,
-						hal_gpio_irq_trig_t trig, hal_gpio_pull_t pull)
-{ /*
-    struct extint_chan_conf cfg;
-    int rc;
-    int8_t eic;
-
-    NVIC_SetVector(EIC_IRQn, (uint32_t) hal_gpio_irq);
-    NVIC_EnableIRQ(EIC_IRQn);
-
-    extint_chan_get_config_defaults(&cfg);
-
-    /* Configure the gpio for an external interrupt *
-    rc = 0;
-    switch (trig) {
-    case HAL_GPIO_TRIG_NONE:
-        rc = -1;
-        break;
-    case HAL_GPIO_TRIG_RISING:
-        cfg.detection_criteria = EXTINT_DETECT_RISING;
-        break;
-    case HAL_GPIO_TRIG_FALLING:
-        cfg.detection_criteria = EXTINT_DETECT_FALLING;
-        break;
-    case HAL_GPIO_TRIG_BOTH:
-        cfg.detection_criteria = EXTINT_DETECT_BOTH;
-        break;
-    case HAL_GPIO_TRIG_LOW:
-        cfg.detection_criteria = EXTINT_DETECT_LOW;
-        break;
-    case HAL_GPIO_TRIG_HIGH:
-        cfg.detection_criteria = EXTINT_DETECT_HIGH;
-        break;
-    default:
-        rc = -1;
-        break;
-    }
-    if (rc) {
-        return rc;
-    }
-
-    switch (pull) {
-    case HAL_GPIO_PULL_NONE:
-        cfg.gpio_pin_pull = EXTINT_PULL_NONE;
-        break;
-    case HAL_GPIO_PULL_UP:
-        cfg.gpio_pin_pull = EXTINT_PULL_UP;
-        break;
-    case HAL_GPIO_PULL_DOWN:
-        cfg.gpio_pin_pull = EXTINT_PULL_DOWN;
-        break;
-    default:
-        rc = -1;
-        break;
-    }
-    if (rc) {
-        return rc;
-    }
-
-    cfg.gpio_pin = pin;
-    cfg.gpio_pin_mux = 0;
-
-    eic = hal_gpio_irq_eic(pin);
-    if (eic < 0) {
-        return -1;
-    }
-    if (hal_gpio_irqs[eic].func) {
-        return -1;
-    }
-    hal_gpio_irqs[eic].func = handler;
-    hal_gpio_irqs[eic].arg = arg;
-
-    extint_chan_set_config(eic, &cfg);
-    return 0; */
-}
-
-/**
- * gpio irq release
- *
- * No longer interrupt when something occurs on the pin. NOTE: this function
- * does not change the GPIO push/pull setting.
- *
- * @param pin
- */
-void hal_gpio_irq_release(int pin)
-{
-	/*
-    int8_t eic;
-
-    eic = hal_gpio_irq_eic(pin);
-    if (eic < 0) {
-        return;
-    }
-    hal_gpio_irq_disable(pin);
-    hal_gpio_irqs[eic].func = NULL;
-	*/
-}
-
-/**
- * gpio irq enable
- *
- * Enable the irq on the specified pin
- *
- * @param pin
- */
-void hal_gpio_irq_enable(int pin)
-{/*
-    int8_t eic;
-
-    eic = hal_gpio_irq_eic(pin);
-    if (eic < 0) {
-        return;
-    }
-
-    extint_chan_enable_callback(eic, EXTINT_CALLBACK_TYPE_DETECT);
-	*/
-}
-
-/**
- * gpio irq disable
- *
- *
- * @param pin
- */
-void hal_gpio_irq_disable(int pin)
-{/*
-    int8_t eic;
-
-    eic = hal_gpio_irq_eic(pin);
-    if (eic < 0) {
-        return;
-    }
-    extint_chan_disable_callback(eic, EXTINT_CALLBACK_TYPE_DETECT);*/
 }

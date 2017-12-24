@@ -1,0 +1,4 @@
+### Package: targets/ub_blinky
+
+syscfg.vals:
+    BSP_UPBOARD_X: "1"
