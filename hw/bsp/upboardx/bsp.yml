@@ -18,15 +18,15 @@ bsp.flash_map:
         # System areas.
         FLASH_AREA_BOOTLOADER:
             device: 0
-            offset: 0x00000000
+            offset: 0x00080000
             size: 48kB
         FLASH_AREA_IMAGE_0:
             device: 0
-            offset: 0x0000c000
+            offset: 0x0008c000
             size: 96kB
         FLASH_AREA_IMAGE_1:
             device: 0
-            offset: 0x00024000
+            offset: 0x00104000
             size: 96kB
         FLASH_AREA_IMAGE_SCRATCH:
             device: 0
