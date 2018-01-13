@@ -24,7 +24,10 @@ static const struct hal_flash_funcs sam3x8_flash_funcs = {
 /* TODO: Add second memory bank to flash */
 struct hal_flash sam3x8_flash_dev_1 = {
     .hf_itf = &sam3x8_flash_funcs,
-    .hf_size = 1024 * 256
+    .hf_base_addr = 0x0,
+    .hf_size = 1024 * 256,
+    .hf_sector_cnt = 1,
+    .hf_align = 1 // TODO: This seems wrong, only likely to be an issue when writing
 };
 
 static int sam3x8_flash_read(const struct hal_flash *dev, uint32_t address,
@@ -46,8 +49,10 @@ static int sam3x8_flash_erase_sector(const struct hal_flash *dev, uint32_t secto
 }
 
 static int sam3x8_flash_sector_info(const struct hal_flash *dev, int idx,
-        uint32_t *addr, uint32_t *sz) {
-    return dev->hf_size;
+        uint32_t *start, uint32_t *sz) {
+    *start = 0x0;
+    *sz = dev->hf_size;
+    return 0;
 }
 
 static int sam3x8_flash_init(const struct hal_flash *dev)
@@ -59,10 +64,6 @@ static int sam3x8_flash_init(const struct hal_flash *dev)
     if(flash_init(FLASH_ACCESS_MODE_128, 6)) {
         return -1;
     }
-
-    sam3x8_flash_dev_1.hf_itf = &sam3x8_flash_funcs;
-    sam3x8_flash_dev_1.hf_sector_cnt = 1;
-    sam3x8_flash_dev_1.hf_align = 1;
 
     return 0;
 }
