@@ -2,3 +2,4 @@
 
 syscfg.vals:
     BSP_UPBOARD_X: "1"
+    BOOT_LOADER: "1"

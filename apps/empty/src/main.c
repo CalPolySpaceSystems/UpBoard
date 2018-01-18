@@ -21,6 +21,7 @@ int main(int argc, char **argv)
     mcu_sim_parse_args(argc, argv);
 #endif
 
+    hal_bsp_init();
     sysinit();
     /* Debug breakpoint for testing */
     __asm__("bkpt");
