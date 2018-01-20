@@ -37,7 +37,6 @@ int main(int argc, char **argv)
 
     while(1) {
         loops++;
-        __asm__("bkpt");
         os_time_delay(OS_TICKS_PER_SEC);
         led_dir = !led_dir;
         hal_gpio_write(LED_BLINK_PIN, led_dir);
