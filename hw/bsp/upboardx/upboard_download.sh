@@ -6,7 +6,7 @@ CFG="-f $BSP_PATH/upboard.cfg"
 
 if [ "$MFG_IMAGE" ]; then
     FLASH_OFFSET=0x00000000
-#elif [ "$BOOT_LOADER" ]; then
+    CFG_POST_INIT="at91sam3 gpnvm set 1"
 fi
 
 common_file_to_load

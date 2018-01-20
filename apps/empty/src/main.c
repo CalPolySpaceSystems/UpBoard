@@ -1,10 +1,15 @@
 #include <assert.h>
 #include <string.h>
+#include <hal/hal_bsp.h>
+#include <hal/hal_gpio.h>
+#include <sysinit/sysinit.h>
+#include <os/os.h>
 
-#include "sysinit/sysinit.h"
 #ifdef ARCH_sim
 #include "mcu/mcu_sim.h"
 #endif
+
+#define LED_BLINK_PIN (59)
 
 /**
  * main
@@ -13,6 +18,9 @@
  *
  * @return int NOTE: this function should never return!
  */
+volatile int led_dir;
+volatile int loops;
+
 int main(int argc, char **argv)
 {
     int rc;
@@ -23,8 +31,18 @@ int main(int argc, char **argv)
 
     hal_bsp_init();
     sysinit();
-    /* Debug breakpoint for testing */
-    __asm__("bkpt");
+    hal_gpio_init_out(LED_BLINK_PIN, 1);
+    led_dir = 1;
+    loops = 0;
+
+    while(1) {
+        loops++;
+        __asm__("bkpt");
+        os_time_delay(OS_TICKS_PER_SEC);
+        led_dir = !led_dir;
+        hal_gpio_write(LED_BLINK_PIN, led_dir);
+    }
+
     assert(0);
 
     return rc;

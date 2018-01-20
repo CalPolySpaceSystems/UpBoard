@@ -13,7 +13,7 @@ extern "C" {
 
 extern uint8_t _ram_start;
 // TODO: This can be expanded if necessary
-#define RAM_SIZE        0x00008000
+#define RAM_SIZE 0x00008000
 
 #ifdef __cplusplus
 }
