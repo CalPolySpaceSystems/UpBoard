@@ -6,3 +6,4 @@ Currently it's just board support code for the upboard, but will grow in the fut
 
 Board support code inspired by [Runtimeco's Arduino Zero BSP](https://github.com/runtimeco/mynewt_arduino_zero)
 
+Chip target is the SAM3x8e
