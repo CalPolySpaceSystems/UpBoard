@@ -8,7 +8,10 @@
  The board has 1 UART and 3 USARTS
 */
 #define UART_COUNT 4
+
+/* clock rate should be something like - sysclk_get_peripheral_hz() */
 #define USART_CLOCK_RATE 80000
+
 #define TX_BUFFER_SIZE (8)
 
 struct hal_uart {
@@ -17,6 +20,7 @@ struct hal_uart {
     uint8_t tx_on;
     int16_t rxdata;
     uint8_t txdata[TX_BUFFER_SIZE];
+    /* Called with the read data */
     hal_uart_rx_char u_rx_func;
     hal_uart_tx_char u_tx_func;
     hal_uart_tx_done u_tx_done;
@@ -25,6 +29,18 @@ struct hal_uart {
 };
 typedef struct hal_uart hal_uart_t;
 static hal_uart_t uarts[UART_COUNT] = {'\0'};
+
+int fill_tx_buffer(hal_uart_t *u){
+    int i, val;
+    for (i = 0; i < TX_BUFFER_SIZE; i++){
+        val = u->u_tx_func(u->u_func_arg);
+        if (val < 0){
+            break;
+        }
+        u->txdata[i] = val;
+    }
+    return i;
+}
 
 /* Internal helper function */
 void *translate_port_to_uart(int port){
@@ -65,15 +81,31 @@ int hal_uart_init(int uart, void *cfg){
     if (uart >= UART_COUNT){
         return -1;
     }
+    uarts[uart].uart = translate_port_to_uart(uart);
+    /* Potential to copy cfg to options here */
+
     return 0;
 }
 
 int hal_uart_init_cbs(int uart, hal_uart_tx_char tx_func,
-  hal_uart_tx_done tx_done, hal_uart_rx_char rx_func, void *arg);
+  hal_uart_tx_done tx_done, hal_uart_rx_char rx_func, void *arg){
+    if (uart >= UART_COUNT || uarts[uart].u_open){
+        return -1;
+    }
+    uarts[uart].u_tx_done = tx_done;
+    uarts[uart].u_rx_func = rx_func;
+    uarts[uart].u_tx_func = tx_func;
+    uarts[uart].u_func_arg = arg;
+    return 0;
+}
 
 
 int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t stopbits,
                         enum hal_uart_parity parity, enum hal_uart_flow_ctl flow_ctl){
+    if (uart->u_open){
+        return -1;
+    }
+    
     uart->options.baudrate = speed;
     
     /* Set char length */
@@ -134,9 +166,11 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
         default:
             return -1;
     }
-
+    uart->u_open = 1;
     /* clock rate should be something like - sysclk_get_peripheral_hz() */
-    usart_init_rs232(uart->uart, &(uart->options), USART_CLOCK_RATE);
+    if (!usart_init_rs232(uart->uart, &(uart->options), USART_CLOCK_RATE)){
+        return -1;
+    }
 
     return 0;
 }
@@ -163,7 +197,17 @@ int hal_uart_config(int uart, int32_t speed, uint8_t databits, uint8_t stopbits,
  * Close UART port. Can call hal_uart_config() with different settings after
  * calling this.
  */
-int hal_uart_close(int port);
+int hal_uart_close(int port){
+    hal_uart_t *u = &uarts[port];
+    if (is_usart(u->uart)){
+        usart_disable_rx(u->uart);
+        usart_disable_tx(u->uart);
+    }else{
+
+    }
+    u->u_open = 0;
+    return 0;
+}
 
 /**
  * hal uart start tx
@@ -171,7 +215,32 @@ int hal_uart_close(int port);
  * More data queued for transmission. UART driver will start asking for that
  * data.
  */
-void hal_uart_start_tx(int uart);
+void hal_uart_start_tx(int port){
+    hal_uart_t *u = &uarts[port];
+    int sz, i = 0;
+    if (port >= UART_COUNT || !u->u_open){
+        return;
+    }
+    /* While there is data to write */
+    u->tx_on = 1;
+    while ((sz = fill_tx_buffer(u))){
+        if (is_usart(u)){
+            for (i = 0; i < sz; i++){
+                /* TODO - replace with a sleep */
+                while (!usart_is_tx_ready(u->uart));
+                usart_write(u->uart, (uint32_t) u->txdata[i]);  
+            }
+        }else{
+
+        }
+    }
+
+    /* Call back the user tx done function */
+    if (u->u_tx_done){
+        u->u_tx_done(u->u_func_arg);
+    }
+    u->tx_on = 0;
+}
 
 /**
  * hal uart start rx
@@ -180,7 +249,18 @@ void hal_uart_start_tx(int uart);
  * This is meaningful after uart_rx_char callback has returned -1 telling
  * that no more data can be accepted.
  */
-void hal_uart_start_rx(int uart);
+void hal_uart_start_rx(int port){
+    hal_uart_t *u = &uarts[port];
+    if (port >= UART_COUNT || !u->u_open){
+        return;
+    }
+    if (is_usart(u->uart)){
+        usart_enable_rx(u->uart);
+    }else{
+
+    }
+
+}
 
 /**
  * hal uart blocking tx
@@ -189,4 +269,29 @@ void hal_uart_start_rx(int uart);
  * Used when printing diag output from system crash.
  * Must be called with interrupts disabled.
  */
-void hal_uart_blocking_tx(int uart, uint8_t byte);
+void hal_uart_blocking_tx(int uart, uint8_t data){
+    hal_uart_t *u = &uarts[port];
+    int sz, i = 0;
+    if (port >= UART_COUNT || !u->u_open){
+        return;
+    }
+    /* While there is data to write */
+    u->tx_on = 1;
+    while ((sz = fill_tx_buffer(u))){
+        if (is_usart(u)){
+            for (i = 0; i < sz; i++){
+                /* TODO - replace with a sleep */
+                while (!usart_is_tx_ready(u->uart));
+                usart_write(u->uart, (uint32_t) u->txdata[i]);  
+            }
+        }else{
+
+        }
+    }
+
+    /* Call back the user tx done function */
+    if (u->u_tx_done){
+        u->u_tx_done(u->u_func_arg);
+    }
+    u->tx_on = 0;
+}
