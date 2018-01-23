@@ -18,7 +18,7 @@ struct hal_uart {
     void * uart;
     uint8_t u_open;
     uint8_t tx_on;
-    int16_t rxdata;
+    uint32_t rxdata;
     uint8_t txdata[TX_BUFFER_SIZE];
     /* Called with the read data */
     hal_uart_rx_char u_rx_func;
@@ -225,11 +225,13 @@ void hal_uart_start_tx(int port){
     u->tx_on = 1;
     while ((sz = fill_tx_buffer(u))){
         if (is_usart(u)){
+            usart_enable_tx(u->uart);
             for (i = 0; i < sz; i++){
                 /* TODO - replace with a sleep */
                 while (!usart_is_tx_ready(u->uart));
                 usart_write(u->uart, (uint32_t) u->txdata[i]);  
             }
+            usart_disable_tx(u->uart);
         }else{
 
         }
@@ -256,6 +258,14 @@ void hal_uart_start_rx(int port){
     }
     if (is_usart(u->uart)){
         usart_enable_rx(u->uart);
+        while (!usart_is_rx_buf_end(u->uart)){
+            /* TODO - replace with a sleep */
+            while(!usart_is_rx_ready(u->uart));
+            usart_read(u->uart, &u->rxdata);
+            if (u->u_rx_func){
+                u->u_rx_func(u->u_func_arg, u->rxdata);
+            }
+        }
     }else{
 
     }
@@ -269,7 +279,7 @@ void hal_uart_start_rx(int port){
  * Used when printing diag output from system crash.
  * Must be called with interrupts disabled.
  */
-void hal_uart_blocking_tx(int uart, uint8_t data){
+void hal_uart_blocking_tx(int port, uint8_t data){
     hal_uart_t *u = &uarts[port];
     int sz, i = 0;
     if (port >= UART_COUNT || !u->u_open){
@@ -280,7 +290,6 @@ void hal_uart_blocking_tx(int uart, uint8_t data){
     while ((sz = fill_tx_buffer(u))){
         if (is_usart(u)){
             for (i = 0; i < sz; i++){
-                /* TODO - replace with a sleep */
                 while (!usart_is_tx_ready(u->uart));
                 usart_write(u->uart, (uint32_t) u->txdata[i]);  
             }
