@@ -11,6 +11,7 @@
 
 /* clock rate should be something like - sysclk_get_peripheral_hz() */
 #define USART_CLOCK_RATE 80000
+#define UART_CLOCK_RATE 80000
 
 #define TX_BUFFER_SIZE (8)
 
@@ -173,11 +174,15 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     }
     uart->u_open = 1;
     /* clock rate should be something like - sysclk_get_peripheral_hz() */
-    if (!usart_init_rs232(uart->uart, &(uart->options.usart_options), USART_CLOCK_RATE)){
-        return -1;
-    }
+    return usart_init_rs232(uart->uart, &(uart->options.usart_options), USART_CLOCK_RATE);
+}
 
-    return 0;
+int hal_uart_config_internal(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t stopbits,
+  enum hal_uart_parity parity, enum hal_uart_flow_ctl flow_ctl){
+    uart->options.uart_options.ul_baudrate = speed;
+    uart->options.uart_options.ul_mck = UART_CLOCK_RATE;
+    uart->options.uart_options.ul_mode = parity;
+    return uart_init(uart->uart, &(uart->options.uart_options));
 }
 
 /**
@@ -187,15 +192,18 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
  */
 int hal_uart_config(int uart, int32_t speed, uint8_t databits, uint8_t stopbits,
   enum hal_uart_parity parity, enum hal_uart_flow_ctl flow_ctl){
+      if (uart >= UART_COUNT){
+          return -1;
+      }
       void *uart_ptr = uarts[uart].uart;
       if (is_usart(uart_ptr)){
           /* USART configuration */
           /* Assume USART clock and Board are initialized */
-        hal_usart_config(&uarts[uart], speed, databits, stopbits, parity, flow_ctl);
+        return hal_usart_config(&uarts[uart], speed, databits, stopbits, parity, flow_ctl);
       }else{
           /* UART configuration */
+        return hal_uart_config_internal(&uarts[uart], speed, databits, stopbits, parity, flow_ctl);
       }
-      return 0;
 }
 
 /*
