@@ -14,6 +14,11 @@
 
 #define TX_BUFFER_SIZE (8)
 
+union sam_uart_options_union {
+    sam_usart_opt_t usart_options;
+    sam_uart_opt_t uart_options;
+};
+
 struct hal_uart {
     void * uart;
     uint8_t u_open;
@@ -25,7 +30,7 @@ struct hal_uart {
     hal_uart_tx_char u_tx_func;
     hal_uart_tx_done u_tx_done;
     void *u_func_arg;
-    sam_usart_opt_t options;
+    union sam_uart_options_union options;
 };
 typedef struct hal_uart hal_uart_t;
 static hal_uart_t uarts[UART_COUNT] = {'\0'};
@@ -106,24 +111,24 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
         return -1;
     }
     
-    uart->options.baudrate = speed;
+    uart->options.usart_options.baudrate = speed;
     
     /* Set char length */
     switch (databits){
         case 5:
-            uart->options.char_length = US_MR_CHRL_5_BIT;
+            uart->options.usart_options.char_length = US_MR_CHRL_5_BIT;
         break;
         case 6:
-            uart->options.char_length = US_MR_CHRL_6_BIT;
+            uart->options.usart_options.char_length = US_MR_CHRL_6_BIT;
         break;
         case 7:
-            uart->options.char_length = US_MR_CHRL_7_BIT;
+            uart->options.usart_options.char_length = US_MR_CHRL_7_BIT;
         break;
         case 8:
-            uart->options.char_length = US_MR_CHRL_8_BIT;
+            uart->options.usart_options.char_length = US_MR_CHRL_8_BIT;
         break;
         case 9:
-            uart->options.char_length = US_MR_MODE9;
+            uart->options.usart_options.char_length = US_MR_MODE9;
         break;
         default:
             /* Unsupported mode */
@@ -133,13 +138,13 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     /* Set parity mode */
     switch (parity){
         case HAL_UART_PARITY_NONE:
-            uart->options.parity_type = US_MR_PAR_NO;
+            uart->options.usart_options.parity_type = US_MR_PAR_NO;
         break;
         case HAL_UART_PARITY_ODD:
-            uart->options.parity_type = US_MR_PAR_ODD;
+            uart->options.usart_options.parity_type = US_MR_PAR_ODD;
         break;
         case HAL_UART_PARITY_EVEN:
-            uart->options.parity_type = US_MR_PAR_EVEN;
+            uart->options.usart_options.parity_type = US_MR_PAR_EVEN;
         break;
         default:
             /* Unsupported mode (there are a few that usart supports that this interface does not) */
@@ -149,10 +154,10 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     /* Set stop bits */
     switch(stopbits){
         case 1:
-            uart->options.stop_bits = US_MR_NBSTOP_1_BIT;
+            uart->options.usart_options.stop_bits = US_MR_NBSTOP_1_BIT;
         break;
         case 2:
-            uart->options.stop_bits = US_MR_NBSTOP_2_BIT;
+            uart->options.usart_options.stop_bits = US_MR_NBSTOP_2_BIT;
         break;
         default:
             return -1;
@@ -168,7 +173,7 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     }
     uart->u_open = 1;
     /* clock rate should be something like - sysclk_get_peripheral_hz() */
-    if (!usart_init_rs232(uart->uart, &(uart->options), USART_CLOCK_RATE)){
+    if (!usart_init_rs232(uart->uart, &(uart->options.usart_options), USART_CLOCK_RATE)){
         return -1;
     }
 
