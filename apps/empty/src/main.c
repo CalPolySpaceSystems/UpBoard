@@ -36,6 +36,7 @@ void tx_funct_done(void *garbage){
 }
 
 int rx_funct(void *garbage, unsigned char ga){
+    __asm__("bkpt");
     on = on + 1 % 2;
     hal_gpio_init_out(LED_BLINK_PIN, on);
     return 0;
