@@ -229,7 +229,7 @@ int hal_uart_close(int port){
 void hal_uart_start_tx(int port){
     hal_uart_t *u = &uarts[port];
     int sz, i = 0;
-    if (port >= UART_COUNT || !u->u_open){
+    if (port >= UART_COUNT){
         return;
     }
     /* While there is data to write */
