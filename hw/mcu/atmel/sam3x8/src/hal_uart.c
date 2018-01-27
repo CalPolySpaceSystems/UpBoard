@@ -216,7 +216,7 @@ int hal_uart_close(int port){
         usart_disable_rx(u->uart);
         usart_disable_tx(u->uart);
     }else{
-
+        uart_disable(u->uart);
     }
     u->u_open = 0;
     return 0;
@@ -246,7 +246,12 @@ void hal_uart_start_tx(int port){
             }
             usart_disable_tx(u->uart);
         }else{
-
+            uart_enable_tx(u->uart);
+            for (i = 0; i < sz; i++){
+                while (!uart_is_tx_ready(u->uart));
+                uart_write(u->uart, (uint8_t) u->txdata[i]);
+            }
+            uart_disable_tx(u->uart);
         }
     }
 
@@ -280,7 +285,7 @@ void hal_uart_start_rx(int port){
             }
         }
     }else{
-
+        
     }
 
 }
@@ -295,6 +300,7 @@ void hal_uart_start_rx(int port){
 void hal_uart_blocking_tx(int port, uint8_t data){
     hal_uart_t *u = &uarts[port];
     int sz, i = 0;
+    uint32_t interrupts;
     if (port >= UART_COUNT || !u->u_open){
         return;
     }
@@ -302,12 +308,22 @@ void hal_uart_blocking_tx(int port, uint8_t data){
     u->tx_on = 1;
     while ((sz = fill_tx_buffer(u))){
         if (is_usart(u)){
+            usart_enable_tx(u->uart);
             for (i = 0; i < sz; i++){
                 while (!usart_is_tx_ready(u->uart));
                 usart_write(u->uart, (uint32_t) u->txdata[i]);  
             }
+            usart_disable_tx(u->uart);
         }else{
-
+            interrupts = uart_get_interrupt_mask(u->uart);
+            uart_disable_interrupt(u->uart, UINT32_MAX);
+            uart_enable_tx(u->uart);
+            for (i = 0; i < sz; i++){
+                while (!uart_is_tx_ready(u->uart));
+                uart_write(u->uart, (uint8_t) u->txdata[i]);
+            }
+            uart_disable_tx(u->uart);
+            uart_enable_interrupt(u->uart, interrupts);
         }
     }
 
