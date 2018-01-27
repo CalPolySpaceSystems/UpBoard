@@ -28,6 +28,21 @@ int tx_funct(void *garbage){
     return (int) 'f';
 }
 
+static int on = 0;
+
+void tx_funct_done(void *garbage){
+    on = on + 1 % 2;
+    hal_gpio_init_out(LED_BLINK_PIN, on);
+}
+
+int rx_funct(void *garbage, unsigned char ga){
+    on = on + 1 % 2;
+    hal_gpio_init_out(LED_BLINK_PIN, on);
+    return 0;
+}
+
+
+
 int main(int argc, char **argv)
 {
     int rc;
@@ -38,7 +53,7 @@ int main(int argc, char **argv)
 
     hal_bsp_init();
     sysinit();
-    hal_gpio_init_out(LED_BLINK_PIN, 1);
+    /*hal_gpio_init_out(LED_BLINK_PIN, 1);*/
     led_dir = 1;
     loops = 0;
     #define USART_USING 3
@@ -48,11 +63,11 @@ int main(int argc, char **argv)
     if (hal_uart_config(USART_USING, 9600, 8, 2, HAL_UART_PARITY_NONE, HAL_UART_FLOW_CTL_NONE)){
         assert(0);
     }
-    if (hal_uart_init_cbs(USART_USING, &tx_funct, NULL, NULL, NULL)){
+    if (hal_uart_init_cbs(USART_USING, &tx_funct, &tx_funct_done, &rx_funct, NULL)){
         assert(0);
     }
     while(1) {
-        hal_uart_start_tx(USART_USING);
+        hal_uart_start_rx(USART_USING);
         /*loops++;
         os_time_delay(OS_TICKS_PER_SEC);
         led_dir = !led_dir;
