@@ -273,7 +273,7 @@ void hal_uart_start_tx(int port){
  */
 void hal_uart_start_rx(int port){
     hal_uart_t *u = &uarts[port];
-    if (port >= UART_COUNT || !u->u_open){
+    if (port >= UART_COUNT){
         return;
     }
     if (is_usart(u->uart)){
