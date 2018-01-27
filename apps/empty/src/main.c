@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     if (hal_uart_config(USART_USING, 9600, 8, 2, HAL_UART_PARITY_NONE, HAL_UART_FLOW_CTL_NONE)){
         assert(0);
     }
-    if (hal_uart_init_cbs(USART_USING, &tx_funct, &tx_funct, &tx_funct, &tx_funct)){
+    if (hal_uart_init_cbs(USART_USING, &tx_funct, NULL, NULL, NULL)){
         assert(0);
     }
     while(1) {
