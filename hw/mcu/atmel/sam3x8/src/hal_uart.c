@@ -107,7 +107,10 @@ int hal_uart_init_cbs(int uart, hal_uart_tx_char tx_func,
 int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t stopbits,
                         enum hal_uart_parity parity, enum hal_uart_flow_ctl flow_ctl){
     uart->options.usart_options.baudrate = speed;
-    
+    sysclk_enable_peripheral_clock(ID_USART0);
+    sysclk_enable_peripheral_clock(ID_USART1);
+    sysclk_enable_peripheral_clock(ID_USART2);
+    sysclk_enable_peripheral_clock(ID_USART3);
     /* Set char length */
     switch (databits){
         case 5:
