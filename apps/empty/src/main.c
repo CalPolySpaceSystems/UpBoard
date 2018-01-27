@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     led_dir = 1;
     loops = 0;
     #define USART_USING 0
-    if (hal_uart_init(USART_USING, NULL) == -1){
+    if (hal_uart_init(USART_USING, NULL) != 0){
         assert(0);
         __asm__("bkpt");
     }
