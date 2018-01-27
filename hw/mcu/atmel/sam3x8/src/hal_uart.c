@@ -132,6 +132,8 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
             uart->options.usart_options.char_length = US_MR_MODE9;
         break;
         default:
+            assert(0);
+            __asm__("bkpt");
             /* Unsupported mode */
             return -1;
     }
@@ -148,6 +150,8 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
             uart->options.usart_options.parity_type = US_MR_PAR_EVEN;
         break;
         default:
+            assert(0);
+            __asm__("bkpt");
             /* Unsupported mode (there are a few that usart supports that this interface does not) */
             return -1;
     }
@@ -161,6 +165,8 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
             uart->options.usart_options.stop_bits = US_MR_NBSTOP_2_BIT;
         break;
         default:
+            assert(0);
+            __asm__("bkpt");
             return -1;
     }   
 
@@ -174,6 +180,7 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     }
     uart->options.usart_options.channel_mode = US_MR_CHMODE_AUTOMATIC;
     uart->u_open = 1;
+    __asm__("bkpt");
     return usart_init_rs232(uart->uart, &(uart->options.usart_options), sysclk_get_peripheral_hz());
 }
 
