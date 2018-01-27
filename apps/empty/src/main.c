@@ -54,18 +54,27 @@ int main(int argc, char **argv)
 
     hal_bsp_init();
     sysinit();
+    sysclk_enable_peripheral_clock(ID_USART0);
+    sysclk_enable_peripheral_clock(ID_USART1);
+    sysclk_enable_peripheral_clock(ID_USART2);
+    sysclk_enable_peripheral_clock(ID_USART3);
+    pio_set_peripheral(PIOA, PIO_PERIPH_A, (3 << 10));
+    pio_pull_up(PIOA, (3 << 10), PIO_PULLUP);
     hal_gpio_init_out(LED_BLINK_PIN, 1);
     led_dir = 1;
     loops = 0;
-    #define USART_USING 3
+    #define USART_USING 0
     if (hal_uart_init(USART_USING, NULL) == -1){
         assert(0);
+        __asm__("bkpt");
     }
     if (hal_uart_config(USART_USING, 9600, 8, 2, HAL_UART_PARITY_NONE, HAL_UART_FLOW_CTL_NONE)){
         assert(0);
+        __asm__("bkpt");
     }
     if (hal_uart_init_cbs(USART_USING, &tx_funct, &tx_funct_done, &rx_funct, NULL)){
         assert(0);
+        __asm__("bkpt");
     }
     while(1) {
         hal_uart_start_tx(USART_USING);
