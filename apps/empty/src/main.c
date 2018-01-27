@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         assert(0);
     }
     while(1) {
-        hal_uart_start_rx(USART_USING);
+        hal_uart_start_tx(USART_USING);
         /*loops++;
         os_time_delay(OS_TICKS_PER_SEC);
         led_dir = !led_dir;
