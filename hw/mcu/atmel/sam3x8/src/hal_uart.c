@@ -178,6 +178,8 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
 
 int hal_uart_config_internal(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t stopbits,
   enum hal_uart_parity parity, enum hal_uart_flow_ctl flow_ctl){
+    pio_set_peripheral(PIOA, PIO_PERIPH_A, (3 << 8));
+    pio_pull_up(PIOA, (3 << 8), PIO_PULLUP);
     uart->options.uart_options.ul_baudrate = speed;
     uart->options.uart_options.ul_mck = sysclk_get_peripheral_hz();
     uart->options.uart_options.ul_mode = parity;
