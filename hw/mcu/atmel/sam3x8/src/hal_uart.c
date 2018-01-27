@@ -3,15 +3,12 @@
 #include <hal/hal_uart.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sysclk.h>
 
 /*
  The board has 1 UART and 3 USARTS
 */
-#define UART_COUNT 4
-
-/* clock rate should be something like - sysclk_get_peripheral_hz() */
-#define USART_CLOCK_RATE 80000
-#define UART_CLOCK_RATE 80000
+#define UART_COUNT (4)
 
 #define TX_BUFFER_SIZE (8)
 
@@ -174,13 +171,13 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     }
     uart->u_open = 1;
     /* clock rate should be something like - sysclk_get_peripheral_hz() */
-    return usart_init_rs232(uart->uart, &(uart->options.usart_options), USART_CLOCK_RATE);
+    return usart_init_rs232(uart->uart, &(uart->options.usart_options), sysclk_get_peripheral_hz());
 }
 
 int hal_uart_config_internal(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t stopbits,
   enum hal_uart_parity parity, enum hal_uart_flow_ctl flow_ctl){
     uart->options.uart_options.ul_baudrate = speed;
-    uart->options.uart_options.ul_mck = UART_CLOCK_RATE;
+    uart->options.uart_options.ul_mck = sysclk_get_peripheral_hz();
     uart->options.uart_options.ul_mode = parity;
     return uart_init(uart->uart, &(uart->options.uart_options));
 }
