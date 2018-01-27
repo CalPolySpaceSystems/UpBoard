@@ -93,7 +93,7 @@ int hal_uart_init(int uart, void *cfg){
 
 int hal_uart_init_cbs(int uart, hal_uart_tx_char tx_func,
   hal_uart_tx_done tx_done, hal_uart_rx_char rx_func, void *arg){
-    if (uart >= UART_COUNT || uarts[uart].u_open){
+    if (uart >= UART_COUNT){
         return -1;
     }
     uarts[uart].u_tx_done = tx_done;
@@ -106,10 +106,6 @@ int hal_uart_init_cbs(int uart, hal_uart_tx_char tx_func,
 
 int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t stopbits,
                         enum hal_uart_parity parity, enum hal_uart_flow_ctl flow_ctl){
-    if (uart->u_open){
-        return -1;
-    }
-    
     uart->options.usart_options.baudrate = speed;
     
     /* Set char length */

@@ -25,7 +25,7 @@ volatile int loops;
 
 
 int tx_funct(void *garbage){
-    return (int) 'h';
+    return (int) 'f';
 }
 
 int main(int argc, char **argv)
@@ -41,10 +41,16 @@ int main(int argc, char **argv)
     hal_gpio_init_out(LED_BLINK_PIN, 1);
     led_dir = 1;
     loops = 0;
-    #define USART_USING 0
-    hal_uart_init(USART_USING, NULL);
-    hal_uart_config(USART_USING, 9600, 8, 2, HAL_UART_PARITY_NONE, HAL_UART_FLOW_CTL_NONE);
-    hal_uart_init_cbs(USART_USING, &tx_funct, NULL, NULL, NULL);
+    #define USART_USING 3
+    if (hal_uart_init(USART_USING, NULL) == -1){
+        assert(0);
+    }
+    if (hal_uart_config(USART_USING, 9600, 8, 2, HAL_UART_PARITY_NONE, HAL_UART_FLOW_CTL_NONE)){
+        assert(0);
+    }
+    if (hal_uart_init_cbs(USART_USING, &tx_funct, &tx_funct, &tx_funct, &tx_funct)){
+        assert(0);
+    }
     while(1) {
         hal_uart_start_tx(USART_USING);
         /*loops++;
