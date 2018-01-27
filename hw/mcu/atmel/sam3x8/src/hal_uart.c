@@ -172,6 +172,7 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
         default:
             return -1;
     }
+    uart->options.channel_mode = US_MR_CHMODE_AUTOMATIC;
     uart->u_open = 1;
     return usart_init_rs232(uart->uart, &(uart->options.usart_options), sysclk_get_peripheral_hz());
 }
