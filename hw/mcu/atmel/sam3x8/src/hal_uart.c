@@ -22,6 +22,7 @@ struct hal_uart {
     uint8_t u_open;
     uint8_t tx_on;
     uint32_t rxdata;
+    uint8_t uart_rxdata;
     uint8_t txdata[TX_BUFFER_SIZE];
     /* Called with the read data */
     hal_uart_rx_char u_rx_func;
@@ -281,8 +282,17 @@ void hal_uart_start_rx(int port){
                 u->u_rx_func(u->u_func_arg, u->rxdata);
             }
         }
+        usart_disable_rx(u->uart);
     }else{
-        
+        uart_enable_rx(u->uart);
+        while (!uart_is_rx_buf_end(u->uart)){
+            uart_read(u->uart, &u->uart_rxdata);
+            while (!uart_is_rx_ready(u->uart));
+            if (u->u_rx_func){
+                u->u_rx_func(u->u_func_arg, u->uart_rxdata);
+            }
+        }
+        uart_disable_rx(u->uart);
     }
 
 }
