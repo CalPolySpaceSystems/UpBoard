@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     hal_gpio_init_out(LED_BLINK_PIN, 1);
     led_dir = 1;
     loops = 0;
-    #define USART_USING 0
+    #define USART_USING 3
     if (hal_uart_init(USART_USING, NULL) != 0){
         assert(0);
         __asm__("bkpt");
