@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <sysclk.h>
+#include <pio.h>
 
 /*
  The board has 1 UART and 3 USARTS
@@ -111,6 +112,10 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     sysclk_enable_peripheral_clock(ID_USART1);
     sysclk_enable_peripheral_clock(ID_USART2);
     sysclk_enable_peripheral_clock(ID_USART3);
+    pio_enable_output_write(PIO_TYPE_PIO_PERIPH_A, 0);
+    pio_enable_output_write(PIO_TYPE_PIO_PERIPH_B, 0);
+    pio_enable_output_write(PIO_TYPE_PIO_PERIPH_C, 0);
+    pio_enable_output_write(PIO_TYPE_PIO_PERIPH_D, 0);
     /* Set char length */
     switch (databits){
         case 5:
