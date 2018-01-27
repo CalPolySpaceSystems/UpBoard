@@ -182,6 +182,8 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     uart->u_open = 1;
     __asm__("bkpt");
     int tickrate = sysclk_get_peripheral_hz();
+    uart->u_open = 2;
+    uart->u_open = 1;
     return usart_init_rs232(uart->uart, &(uart->options.usart_options), tickrate);
 }
 
