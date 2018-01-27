@@ -6,7 +6,6 @@
 #include <os/os.h>
 #include <hal/hal_uart.h>
 
-
 #ifdef ARCH_sim
 #include "mcu/mcu_sim.h"
 #endif
@@ -54,12 +53,7 @@ int main(int argc, char **argv)
 
     hal_bsp_init();
     sysinit();
-    sysclk_enable_peripheral_clock(ID_USART0);
-    sysclk_enable_peripheral_clock(ID_USART1);
-    sysclk_enable_peripheral_clock(ID_USART2);
-    sysclk_enable_peripheral_clock(ID_USART3);
-    pio_set_peripheral(PIOA, PIO_PERIPH_A, (3 << 10));
-    pio_pull_up(PIOA, (3 << 10), PIO_PULLUP);
+
     hal_gpio_init_out(LED_BLINK_PIN, 1);
     led_dir = 1;
     loops = 0;
