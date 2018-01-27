@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
     hal_bsp_init();
     sysinit();
-    /*hal_gpio_init_out(LED_BLINK_PIN, 1);*/
+    hal_gpio_init_out(LED_BLINK_PIN, 1);
     led_dir = 1;
     loops = 0;
     #define USART_USING 3

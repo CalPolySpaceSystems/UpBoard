@@ -112,10 +112,7 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     sysclk_enable_peripheral_clock(ID_USART1);
     sysclk_enable_peripheral_clock(ID_USART2);
     sysclk_enable_peripheral_clock(ID_USART3);
-    pio_enable_output_write(PIOA, 0);
-    pio_enable_output_write(PIOB, 0);
-    pio_enable_output_write(PIOC, 0);
-    pio_enable_output_write(PIOD, 0);
+    pio_set_peripheral(PIOA, PIO_PERIPH_A, (3 << 10));
     /* Set char length */
     switch (databits){
         case 5:
@@ -246,14 +243,12 @@ void hal_uart_start_tx(int port){
                 while (!usart_is_tx_ready(u->uart));
                 usart_write(u->uart, (uint32_t) u->txdata[i]);  
             }
-            usart_disable_tx(u->uart);
         }else{
             uart_enable_tx(u->uart);
             for (i = 0; i < sz; i++){
                 while (!uart_is_tx_ready(u->uart));
                 uart_write(u->uart, (uint8_t) u->txdata[i]);
             }
-            uart_disable_tx(u->uart);
         }
     }
 
@@ -286,7 +281,6 @@ void hal_uart_start_rx(int port){
                 u->u_rx_func(u->u_func_arg, u->rxdata);
             }
         }
-        usart_disable_rx(u->uart);
     }else{
         uart_enable_rx(u->uart);
         while (!uart_is_rx_buf_end(u->uart)){
@@ -296,7 +290,6 @@ void hal_uart_start_rx(int port){
                 u->u_rx_func(u->u_func_arg, u->uart_rxdata);
             }
         }
-        uart_disable_rx(u->uart);
     }
 
 }
