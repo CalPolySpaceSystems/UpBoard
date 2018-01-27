@@ -181,7 +181,8 @@ int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t 
     uart->options.usart_options.channel_mode = US_MR_CHMODE_AUTOMATIC;
     uart->u_open = 1;
     __asm__("bkpt");
-    return usart_init_rs232(uart->uart, &(uart->options.usart_options), sysclk_get_peripheral_hz());
+    int tickrate = sysclk_get_peripheral_hz();
+    return usart_init_rs232(uart->uart, &(uart->options.usart_options), tickrate);
 }
 
 int hal_uart_config_internal(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t stopbits,
