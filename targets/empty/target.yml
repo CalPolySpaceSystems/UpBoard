@@ -1,3 +1,4 @@
 ### Target: targets/upboard
 target.app: "@upboard/apps/empty"
 target.bsp: "@upboard/hw/bsp/upboardx"
+target.build_profile: "debug"

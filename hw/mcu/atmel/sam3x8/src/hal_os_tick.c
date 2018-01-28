@@ -32,7 +32,6 @@ void os_tick_init(uint32_t os_ticks_per_sec, int prio)
 {
     uint32_t reload_val;
 
-    __asm__("bkpt");
     reload_val = ((uint64_t)SystemCoreClock / os_ticks_per_sec) - 1;
 
     /* Set the system time ticker up */
