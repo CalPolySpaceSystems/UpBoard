@@ -396,8 +396,9 @@ int16_t spi_set_baudrate_div(Spi *p_spi, uint32_t ul_pcs_ch,
 		uint8_t uc_baudrate_divider)
 {
     /* Programming the SCBR field to 0 is forbidden */
-    if (!uc_baudrate_divider)
+    if (!uc_baudrate_divider) {
         return -1;
+	}
 
 	p_spi->SPI_CSR[ul_pcs_ch] &= (~SPI_CSR_SCBR_Msk);
 	p_spi->SPI_CSR[ul_pcs_ch] |= SPI_CSR_SCBR(uc_baudrate_divider);

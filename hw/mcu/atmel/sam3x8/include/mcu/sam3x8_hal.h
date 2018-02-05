@@ -8,7 +8,6 @@
 struct sam3x8_timer_cfg
 {
     IRQn_Type irq;
-    int channel; /* 3 channels per HW Timer */
     Tc *hwtimer;
 };
 

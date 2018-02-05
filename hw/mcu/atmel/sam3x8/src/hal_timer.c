@@ -9,6 +9,7 @@
 #include "tc.h"
 #include "mcu/sam3x8_hal.h"
 #include "bsp/cmsis_nvic.h"
+#include "board.h"
 
 /* IRQ prototype */
 typedef void (*hal_timer_irq_handler_t)(void);
@@ -17,9 +18,11 @@ typedef void (*hal_timer_irq_handler_t)(void);
 /* TODO: Add support for other timers */
 #define SAM3X8_HAL_TIMER_MAX (1)
 
+#define TMR_PRESCALER_CHANNEL 0
+#define TMR_NORMAL_CHANNEL 1
+
 /* Internal timer data structure */
 struct sam3x8_hal_timer {
-    uint8_t tmr_channel;
     uint8_t tmr_enabled;
     IRQn_Type tmr_irq;
     uint8_t tmr_srcclk;
@@ -67,7 +70,7 @@ sam3x8_timer_set_ocmp(struct sam3x8_hal_timer *bsptimer, uint32_t expiry)
     hwtimer = bsptimer->tc_mod;
 
     /* Disable ocmp interrupt and set new value */
-    hwtimer->TC_CHANNEL[bsptimer->tmr_channel].TC_IDR=0xF;
+    hwtimer->TC_CHANNEL[TMR_NORMAL_CHANNEL].TC_IDR=0xF;
     delta_t = (int32_t)(expiry - bsptimer->tmr_cntr);
     if (delta_t < 0) {
         goto set_ocmp_late;
@@ -75,14 +78,14 @@ sam3x8_timer_set_ocmp(struct sam3x8_hal_timer *bsptimer, uint32_t expiry)
         /* Set ocmp and check if missed it */
 
         /* Set output compare register to timer expiration */
-        tc_write_rc(hwtimer, bsptimer->tmr_channel, expiry);
+        tc_write_rc(hwtimer, TMR_NORMAL_CHANNEL, expiry);
 
         /* Enable RC compare interrupt */
-        hwtimer->TC_CHANNEL[bsptimer->tmr_channel].TC_IER=TC_IER_CPCS;
-        hwtimer->TC_CHANNEL[bsptimer->tmr_channel].TC_IDR=~TC_IER_CPCS;
+        hwtimer->TC_CHANNEL[TMR_NORMAL_CHANNEL].TC_IER=TC_IER_CPCS;
+        hwtimer->TC_CHANNEL[TMR_NORMAL_CHANNEL].TC_IDR=~TC_IER_CPCS;
 
         /* Force interrupt to occur as we may have missed it */
-        if (tc_read_cv(hwtimer, bsptimer->tmr_channel) >= expiry) {
+        if (tc_read_cv(hwtimer, TMR_NORMAL_CHANNEL) >= expiry) {
             goto set_ocmp_late;
         }
     } else {
@@ -98,7 +101,7 @@ set_ocmp_late:
 static void
 sam3x8_timer_disable_ocmp(struct sam3x8_hal_timer *bsptimer)
 {
-    bsptimer->tc_mod->TC_CHANNEL[bsptimer->tmr_channel].TC_IDR=0xF;
+    bsptimer->tc_mod->TC_CHANNEL[TMR_NORMAL_CHANNEL].TC_IDR=0xFF;
 }
 
 static uint32_t
@@ -107,7 +110,7 @@ hal_timer_read_bsptimer(struct sam3x8_hal_timer *bsptimer)
     Tc *hwtimer;
     hwtimer = bsptimer->tc_mod;
     cpu_irq_enter_critical();
-    bsptimer->tmr_cntr = tc_read_cv(hwtimer, bsptimer->tmr_channel);
+    bsptimer->tmr_cntr = tc_read_cv(hwtimer, TMR_NORMAL_CHANNEL);
     cpu_irq_leave_critical();
 
     return bsptimer->tmr_cntr;
@@ -160,7 +163,7 @@ hal_timer_irq_handler(struct sam3x8_hal_timer *bsptimer)
 {
 
     /* Clear interupt from register */
-    bsptimer->tc_mod->TC_CHANNEL[bsptimer->tmr_channel].TC_IDR=TC_IER_CPCS;
+    bsptimer->tc_mod->TC_CHANNEL[TMR_NORMAL_CHANNEL].TC_IDR=TC_IER_CPCS;
 
     /* Count # of timer isrs */
     ++bsptimer->timer_isrs;
@@ -218,62 +221,18 @@ hal_timer_init(int timer_num, void *cfg)
     bsptimer->tmr_irq = irq;
     bsptimer->tc_mod = tmr_cfg->hwtimer;
     bsptimer->tmr_initialized = 1;
-    bsptimer->tmr_channel = tmr_cfg->channel;
 
     /* Disable existing interupt config and configure new one */
     NVIC_DisableIRQ(irq);
     NVIC_SetPriority(irq, (1 << __NVIC_PRIO_BITS) - 1);
     NVIC_SetVector(irq, (uint32_t)irq_isr);
-    tc_disable_interrupt(bsptimer->tc_mod, bsptimer->tmr_channel, 0xFFFF);
+    tc_disable_interrupt(bsptimer->tc_mod, TMR_NORMAL_CHANNEL, 0xFFFF);
 
     return 0;
 
 err:
     return rc;
 }
-
-
-
-/* Joshua - This code is from https://github.com/ivanseidel/DueTimer/ */
-uint8_t best_clock(double frequency, uint32_t *retRC){
-    /*
-        Pick the best Clock, thanks to Ogle Basil Hall!
-        Timer           Definition
-        TIMER_CLOCK1    MCK /  2
-        TIMER_CLOCK2    MCK /  8
-        TIMER_CLOCK3    MCK / 32
-        TIMER_CLOCK4    MCK /128
-    */
-    const struct {
-        uint8_t flag;
-        uint8_t divisor;
-    } clockConfig[] = {
-        { TC_CMR_TCCLKS_TIMER_CLOCK1,   2 },
-        { TC_CMR_TCCLKS_TIMER_CLOCK2,   8 },
-        { TC_CMR_TCCLKS_TIMER_CLOCK3,  32 },
-        { TC_CMR_TCCLKS_TIMER_CLOCK4, 128 }
-    };
-    float ticks;
-    float error;
-    int clkId = 3;
-    int bestClock = 3;
-    float bestError = 9.999e99;
-    do
-    {
-        ticks = (float) SystemCoreClock / frequency / (float) clockConfig[clkId].divisor;
-        // error = abs(ticks - round(ticks));
-        error = clockConfig[clkId].divisor * abs(ticks - round(ticks));	// Error comparison needs scaling
-        if (error < bestError)
-        {
-            bestClock = clkId;
-            bestError = error;
-        }
-    } while (clkId-- > 0);
-    ticks = (float) SystemCoreClock / frequency / (float) clockConfig[bestClock].divisor;
-    *retRC = (uint32_t) round(ticks);
-    return clockConfig[bestClock].flag;
-}
-
 
 /**
  * hal timer config
@@ -289,8 +248,7 @@ int
 hal_timer_config(int timer_num, uint32_t freq_hz)
 {
     int rc;
-    uint32_t clk_freq;
-    uint8_t clock;
+    uint32_t tick_rate, clock;
     struct sam3x8_hal_timer *bsptimer;
 
     /* Get timer. Make sure not enabled */
@@ -305,51 +263,54 @@ hal_timer_config(int timer_num, uint32_t freq_hz)
     pmc_enable_periph_clk(bsptimer->tmr_irq);
 
     /* Select the clock source closest to the desired frequency */
-    for(int i = 0; i < 4; i++) {
-        switch(i) {
-            case 0:
-                clk_freq = SystemCoreClock / 128.0;
-                if(clk_freq > freq_hz) {
-                    bsptimer->tmr_freq = clk_freq;
-                    clock = TC_CMR_TCCLKS_TIMER_CLOCK4;
-                    break;
-                }
-            case 1:
-                clk_freq = SystemCoreClock / 32.0;
-                if(clk_freq > freq_hz) {
-                    bsptimer->tmr_freq = clk_freq;
-                    clock = TC_CMR_TCCLKS_TIMER_CLOCK3;
-                    break;
-                }
-            case 2:
-                clk_freq = SystemCoreClock / 8.0;
-                if(clk_freq > freq_hz) {
-                    bsptimer->tmr_freq = clk_freq;
-                    clock = TC_CMR_TCCLKS_TIMER_CLOCK2;
-                    break;
-                }
-            case 3:
-                clk_freq = SystemCoreClock / 2.0;
-                if(clk_freq > freq_hz) {
-                    bsptimer->tmr_freq = clk_freq;
-                    clock = TC_CMR_TCCLKS_TIMER_CLOCK1;
-                    break;
-                }
-                /* No matching clock, error out */
-                rc = -1;
-                goto err;
-        }
+    if(!tc_find_mck_divisor(freq_hz, (uint32_t) SystemCoreClock, &tick_rate, &clock, BOARD_FREQ_MAINCK_XTAL)) {
+        rc = EINVAL;
+        goto err;
     }
 
+    /*
+     * Because the sam3x doesn't have prescalers, we have to use clock chaining to fake it.
+     * We need to set one timer channel to toogle an output at the requested tick frequency,
+     * then use that output as an to another channel.
+     */
 
-    tc_init(bsptimer->tc_mod, bsptimer->tmr_channel, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | clock);
+    /* Setup timer that toggles output at requested frequency */
+    tc_init(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | TC_CMR_ACPC_TOGGLE | clock);
+    tc_write_rc(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, tick_rate);
+    tc_start(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL);
+
+    /* Setup timer with prescaller channel as input */
+    tc_init(bsptimer->tc_mod, TMR_NORMAL_CHANNEL, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | clock);
+    tc_set_block_mode(bsptimer->tc_mod, TC_BMR_TC1XC1S_TIOA0);
+
     /* Enable the RC Compare Interrupt and disable all others */
-    bsptimer->tc_mod->TC_CHANNEL[bsptimer->tmr_channel].TC_IER=TC_IER_CPCS;
-    bsptimer->tc_mod->TC_CHANNEL[bsptimer->tmr_channel].TC_IDR=~TC_IER_CPCS;
+    bsptimer->tc_mod->TC_CHANNEL[TMR_NORMAL_CHANNEL].TC_IER=TC_IER_CPCS;
+    bsptimer->tc_mod->TC_CHANNEL[TMR_NORMAL_CHANNEL].TC_IDR=~TC_IER_CPCS;
 
     bsptimer->tmr_enabled = 1;
 
-    tc_start(bsptimer->tc_mod, bsptimer->tmr_channel);
+    switch(clock) {
+        case TC_CMR_TCCLKS_TIMER_CLOCK1:
+            bsptimer->tmr_freq = 2 * tick_rate;
+            break;
+        case TC_CMR_TCCLKS_TIMER_CLOCK2:
+            bsptimer->tmr_freq = 8 * tick_rate;
+            break;
+        case TC_CMR_TCCLKS_TIMER_CLOCK3:
+            bsptimer->tmr_freq = 32 * tick_rate;
+            break;
+        case TC_CMR_TCCLKS_TIMER_CLOCK4:
+            bsptimer->tmr_freq = 128 * tick_rate;
+            break;
+        case TC_CMR_TCCLKS_TIMER_CLOCK5:
+            bsptimer->tmr_freq = (BOARD_FREQ_MAINCK_XTAL / 32768) * tick_rate; /* Magic value from tc.c */
+            break;
+        default:
+            rc = EINVAL;
+            goto err;
+    }
+
+    tc_start(bsptimer->tc_mod, TMR_NORMAL_CHANNEL);
 
 
     /* Set isr in vector table and enable interrupt */
@@ -379,7 +340,7 @@ hal_timer_deinit(int timer_num)
 
     SAM3X8_HAL_TIMER_RESOLVE(timer_num, bsptimer);
 
-    tc_stop(bsptimer->tc_mod, bsptimer->tmr_channel);
+    tc_stop(bsptimer->tc_mod, TMR_NORMAL_CHANNEL);
     bsptimer->tmr_enabled = 0;
     bsptimer->tmr_initialized = 0;
 

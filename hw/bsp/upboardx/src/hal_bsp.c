@@ -23,8 +23,7 @@ void hal_bsp_init(void) {
     struct sam3x8_timer_cfg tmr_cfg;
 
     tmr_cfg.hwtimer = TC0;
-    tmr_cfg.irq = TC0_IRQn;
-    tmr_cfg.channel = 0;
+    tmr_cfg.irq = TC1_IRQn;
     rc = hal_timer_init(0, &tmr_cfg);
     assert(rc == 0);
 
