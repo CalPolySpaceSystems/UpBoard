@@ -21,27 +21,7 @@
  */
 volatile int led_dir;
 volatile int loops;
-
-
-int tx_funct(void *garbage){
-    return (int) 'f';
-}
-
-static int on = 0;
-
-void tx_funct_done(void *garbage){
-    on = on + 1 % 2;
-    hal_gpio_init_out(LED_BLINK_PIN, on);
-}
-
-int rx_funct(void *garbage, unsigned char ga){
-    __asm__("bkpt");
-    on = on + 1 % 2;
-    hal_gpio_init_out(LED_BLINK_PIN, on);
-    return 0;
-}
-
-
+volatile int test;
 
 int main(int argc, char **argv)
 {
@@ -57,25 +37,16 @@ int main(int argc, char **argv)
     hal_gpio_init_out(LED_BLINK_PIN, 1);
     led_dir = 1;
     loops = 0;
-    #define USART_USING 3
-    if (hal_uart_init(USART_USING, NULL) != 0){
-        assert(0);
-        __asm__("bkpt");
-    }
-    if (hal_uart_config(USART_USING, 9600, 8, 2, HAL_UART_PARITY_NONE, HAL_UART_FLOW_CTL_NONE)){
-        assert(0);
-        __asm__("bkpt");
-    }
-    if (hal_uart_init_cbs(USART_USING, &tx_funct, &tx_funct_done, &rx_funct, NULL)){
-        assert(0);
-        __asm__("bkpt");
-    }
+
+
     while(1) {
-        hal_uart_start_tx(USART_USING);
-        /*loops++;
-        os_time_delay(OS_TICKS_PER_SEC);
+        //__asm__("bkpt");
+        test = os_cputime_get32();
+        loops++;
+        //os_time_delay(OS_TICKS_PER_SEC);
+        os_cputime_delay_ticks(42000000);
         led_dir = !led_dir;
-        hal_gpio_write(LED_BLINK_PIN, led_dir);*/
+        hal_gpio_write(LED_BLINK_PIN, led_dir);
     }
 
     assert(0);

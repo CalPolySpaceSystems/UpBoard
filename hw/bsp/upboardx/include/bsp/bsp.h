@@ -2,7 +2,6 @@
 #define __UPBOARD_X_BSP_H__
 
 #include <inttypes.h>
-#include <mcu/mcu.h>
 
 #include <syscfg/syscfg.h>
 

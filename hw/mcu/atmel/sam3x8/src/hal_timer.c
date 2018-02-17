@@ -25,7 +25,7 @@ typedef void (*hal_timer_irq_handler_t)(void);
 struct sam3x8_hal_timer {
     uint8_t tmr_enabled;
     IRQn_Type tmr_irq;
-    uint8_t tmr_srcclk;
+    IRQn_Type tmr_prescale_irq;
     uint8_t tmr_initialized;
     uint32_t tmr_cntr;
     uint32_t timer_isrs;
@@ -219,6 +219,8 @@ hal_timer_init(int timer_num, void *cfg)
 
     irq = tmr_cfg->irq;
     bsptimer->tmr_irq = irq;
+    bsptimer->tmr_prescale_irq = tmr_cfg->irq_ps;
+
     bsptimer->tc_mod = tmr_cfg->hwtimer;
     bsptimer->tmr_initialized = 1;
 
@@ -248,7 +250,7 @@ int
 hal_timer_config(int timer_num, uint32_t freq_hz)
 {
     int rc;
-    uint32_t tick_rate, clock;
+    uint32_t div, clock, ticks;
     struct sam3x8_hal_timer *bsptimer;
 
     /* Get timer. Make sure not enabled */
@@ -261,12 +263,15 @@ hal_timer_config(int timer_num, uint32_t freq_hz)
 
     pmc_set_writeprotect(false);
     pmc_enable_periph_clk(bsptimer->tmr_irq);
+    pmc_enable_periph_clk(bsptimer->tmr_prescale_irq);
 
     /* Select the clock source closest to the desired frequency */
-    if(!tc_find_mck_divisor(freq_hz, (uint32_t) SystemCoreClock, &tick_rate, &clock, BOARD_FREQ_MAINCK_XTAL)) {
+    if(!tc_find_mck_divisor(freq_hz, (uint32_t) SystemCoreClock, &div, &clock, BOARD_FREQ_MAINCK_XTAL)) {
         rc = EINVAL;
         goto err;
     }
+
+    ticks = (uint64_t) SystemCoreClock / div / freq_hz;
 
     /*
      * Because the sam3x doesn't have prescalers, we have to use clock chaining to fake it.
@@ -275,12 +280,13 @@ hal_timer_config(int timer_num, uint32_t freq_hz)
      */
 
     /* Setup timer that toggles output at requested frequency */
-    tc_init(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | TC_CMR_ACPC_TOGGLE | clock);
-    tc_write_rc(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, tick_rate);
-    tc_start(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL);
+    tc_init(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, TC_CMR_WAVE | TC_CMR_BURST_NONE | TC_CMR_CPCTRG | TC_CMR_ACPA_CLEAR  | clock);
+    tc_write_rc(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, ticks);
+    tc_write_ra(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, ticks/2);
+
 
     /* Setup timer with prescaller channel as input */
-    tc_init(bsptimer->tc_mod, TMR_NORMAL_CHANNEL, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | clock);
+    tc_init(bsptimer->tc_mod, TMR_NORMAL_CHANNEL, TC_CMR_WAVE | TC_CMR_WAVSEL_UP);
     tc_set_block_mode(bsptimer->tc_mod, TC_BMR_TC1XC1S_TIOA0);
 
     /* Enable the RC Compare Interrupt and disable all others */
@@ -289,28 +295,10 @@ hal_timer_config(int timer_num, uint32_t freq_hz)
 
     bsptimer->tmr_enabled = 1;
 
-    switch(clock) {
-        case TC_CMR_TCCLKS_TIMER_CLOCK1:
-            bsptimer->tmr_freq = 2 * tick_rate;
-            break;
-        case TC_CMR_TCCLKS_TIMER_CLOCK2:
-            bsptimer->tmr_freq = 8 * tick_rate;
-            break;
-        case TC_CMR_TCCLKS_TIMER_CLOCK3:
-            bsptimer->tmr_freq = 32 * tick_rate;
-            break;
-        case TC_CMR_TCCLKS_TIMER_CLOCK4:
-            bsptimer->tmr_freq = 128 * tick_rate;
-            break;
-        case TC_CMR_TCCLKS_TIMER_CLOCK5:
-            bsptimer->tmr_freq = (BOARD_FREQ_MAINCK_XTAL / 32768) * tick_rate; /* Magic value from tc.c */
-            break;
-        default:
-            rc = EINVAL;
-            goto err;
-    }
+    bsptimer->tmr_freq =  (uint64_t) SystemCoreClock / div / ticks;
 
     tc_start(bsptimer->tc_mod, TMR_NORMAL_CHANNEL);
+    tc_start(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL);
 
 
     /* Set isr in vector table and enable interrupt */
@@ -377,10 +365,6 @@ err:
 
 /**
  * hal timer read
- *
- * Returns the timer counter. NOTE: if the timer is a 16-bit timer, only
- * the lower 16 bits are valid. If the timer is a 64-bit timer, only the
- * low 32-bits are returned.
  *
  * @return uint32_t The timer counter register.
  */

@@ -8,6 +8,7 @@
 struct sam3x8_timer_cfg
 {
     IRQn_Type irq;
+    IRQn_Type irq_ps;
     Tc *hwtimer;
 };
 
