@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         test = os_cputime_get32();
         loops++;
         //os_time_delay(OS_TICKS_PER_SEC);
-        os_cputime_delay_ticks(42000000);
+        os_cputime_delay_ticks(1000000);
         led_dir = !led_dir;
         hal_gpio_write(LED_BLINK_PIN, led_dir);
     }

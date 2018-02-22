@@ -112,7 +112,7 @@ hal_timer_read_bsptimer(struct sam3x8_hal_timer *bsptimer)
     cpu_irq_enter_critical();
     bsptimer->tmr_cntr = tc_read_cv(hwtimer, TMR_NORMAL_CHANNEL);
     cpu_irq_leave_critical();
-
+    //__asm__("bkpt");
     return bsptimer->tmr_cntr;
 }
 
@@ -279,14 +279,14 @@ hal_timer_config(int timer_num, uint32_t freq_hz)
      * then use that output as an to another channel.
      */
 
-    /* Setup timer that toggles output at requested frequency */
-    tc_init(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, TC_CMR_WAVE | TC_CMR_BURST_NONE | TC_CMR_CPCTRG | TC_CMR_ACPA_CLEAR  | clock);
+    /* Channel 0: Setup timer that toggles output at requested frequency (42 Mhz)*/
+    tc_init(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, TC_CMR_WAVE | TC_CMR_BURST_NONE | TC_CMR_WAVSEL_UP_RC | TC_CMR_ACPA_SET | TC_CMR_ACPC_CLEAR | clock);
     tc_write_rc(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, ticks);
     tc_write_ra(bsptimer->tc_mod, TMR_PRESCALER_CHANNEL, ticks/2);
 
 
-    /* Setup timer with prescaller channel as input */
-    tc_init(bsptimer->tc_mod, TMR_NORMAL_CHANNEL, TC_CMR_WAVE | TC_CMR_WAVSEL_UP);
+    /* Channel 1: Setup timer with Channel 0 output as input */
+    tc_init(bsptimer->tc_mod, TMR_NORMAL_CHANNEL, TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN | TC_CMR_TCCLKS_XC1 );
     tc_set_block_mode(bsptimer->tc_mod, TC_BMR_TC1XC1S_TIOA0);
 
     /* Enable the RC Compare Interrupt and disable all others */
@@ -381,6 +381,7 @@ hal_timer_read(int timer_num)
 
     /* Assert here since there is no invalid return code */
 err:
+    
     assert(0);
     rc = 0;
     return rc;

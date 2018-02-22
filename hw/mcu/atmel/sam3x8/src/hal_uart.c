@@ -33,8 +33,8 @@ struct hal_uart {
     union sam_uart_options_union options;
 };
 typedef struct hal_uart hal_uart_t;
-static hal_uart_t uarts[UART_COUNT] = {'\0'};
-
+static hal_uart_t uarts[UART_COUNT];
+ 
 int fill_tx_buffer(hal_uart_t *u){
     int i, val;
     for (i = 0; i < TX_BUFFER_SIZE; i++){

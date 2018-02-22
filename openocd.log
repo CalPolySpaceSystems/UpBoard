@@ -9,22 +9,16 @@ cortex_m reset_config sysresetreq
 Info : No device selected, using first device.
 Info : J-Link V10 compiled Dec 12 2017 16:37:47
 Info : Hardware version: 10.10
-Info : VTarget = 3.296 V
+Info : VTarget = 3.322 V
 Info : clock speed 500 kHz
 Info : JTAG tap: at91sam3X8E.cpu tap/device found: 0x4ba00477 (mfg: 0x23b (ARM Ltd.), part: 0xba00, ver: 0x4)
 Info : at91sam3X8E.cpu: hardware has 6 breakpoints, 4 watchpoints
 target halted due to debug-request, current mode: Thread 
-xPSR: 0x61000000 pc: 0x00000a8c msp: 0x20007fc8
+xPSR: 0x21000000 pc: 0x00000a66 msp: 0x20007fc8
 Info : accepting 'gdb' connection on tcp/3333
 Info : JTAG tap: at91sam3X8E.cpu tap/device found: 0x4ba00477 (mfg: 0x23b (ARM Ltd.), part: 0xba00, ver: 0x4)
 target halted due to debug-request, current mode: Thread 
 xPSR: 0x01000000 pc: 0x000000f4 msp: 0x20008000
-Warn : keep_alive() was not invoked in the 1000ms timelimit. GDB alive packet not sent! (310100). Workaround: increase "set remotetimeout" in GDB
-Error: Debug regions are unpowered, an unexpected reset might have happened
-Error: JTAG-DP STICKY ERROR
-Warn : target at91sam3X8E.cpu is not halted
-Polling target at91sam3X8E.cpu failed, trying to reexamine
-Info : at91sam3X8E.cpu: hardware has 6 breakpoints, 4 watchpoints
 shutdown command invoked
 
 
