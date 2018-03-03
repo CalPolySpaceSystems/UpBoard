@@ -30,6 +30,7 @@ void usart_test(void){
 	        USART_SERIAL_STOP_BIT,
 	        US_MR_CHMODE_NORMAL
     };
+    uint32_t c = 'A';
     pio_set_peripheral(PIOA, PIO_PERIPH_A, (3 << 10));
     pio_pull_up(PIOA, (3 << 10), PIO_PULLUP);
     #if SAM4L
@@ -42,8 +43,7 @@ void usart_test(void){
     usart_enable_tx(USART_SERIAL);
     usart_enable_rx(USART_SERIAL);
     while (1){
-        usart_putchar(USART_SERIAL, 'A');    
-        __asm__("bkpt");
+        usart_putchar(USART_SERIAL, c);
     }
 }
 
