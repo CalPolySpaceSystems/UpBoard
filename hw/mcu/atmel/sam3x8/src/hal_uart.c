@@ -30,6 +30,8 @@ void usart_test(void){
 	        USART_SERIAL_STOP_BIT,
 	        US_MR_CHMODE_NORMAL
     };
+    pio_set_peripheral(PIOA, PIO_PERIPH_A, (3 << 10));
+    pio_pull_up(PIOA, (3 << 10), PIO_PULLUP);
     #if SAM4L
       sysclk_enable_peripheral_clock(USART_SERIAL);
     #else
