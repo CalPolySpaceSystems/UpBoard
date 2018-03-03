@@ -1,0 +1,4 @@
+### Target: targets/timing_test
+target.app: "@upboard/apps/timing_test"
+target.bsp: "@upboard/hw/bsp/upboardx"
+target.build_profile: "debug"

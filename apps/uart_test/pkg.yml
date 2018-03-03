@@ -1,0 +1,9 @@
+pkg.name: apps/uart_test
+pkg.type: app
+pkg.description: Application to test uart functionality
+
+pkg.deps:
+    - "@apache-mynewt-core/kernel/os"
+    - "@apache-mynewt-core/sys/console/stub"
+    - "@apache-mynewt-core/hw/hal"
+    - "@apache-mynewt-core/hw/cmsis-core"

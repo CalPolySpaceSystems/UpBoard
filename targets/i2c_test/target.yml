@@ -1,0 +1,4 @@
+### Target: targets/i2c_test
+target.app: "@upboard/apps/i2c_test"
+target.bsp: "@upboard/hw/bsp/upboardx"
+target.build_profile: "debug"
