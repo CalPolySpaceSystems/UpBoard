@@ -41,6 +41,7 @@ void usart_test(void){
     usart_enable_rx(USART_SERIAL);
     while (1){
         usart_putchar(USART_SERIAL, 'A');    
+        __asm__("bkpt");
     }
 }
 

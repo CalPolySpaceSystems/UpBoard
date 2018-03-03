@@ -5,6 +5,7 @@
 #include "os/os.h"
 #include "bsp/bsp.h"
 #include "hal/hal_gpio.h"
+#include "hal/hal_uart.h"
 #ifdef ARCH_sim
 #include "mcu/mcu_sim.h"
 #endif
@@ -54,9 +55,10 @@ init_timer(void)
 int main(int argc, char **argv)
 {
     int rc = 0;
-
-    board_init();
-    sysclk_init();
+    sysinit();
+    init_timer();
+    /*board_init();*/
+    /*sysclk_init();*/
     usart_test();
     
 
