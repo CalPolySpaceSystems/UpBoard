@@ -14,6 +14,35 @@
 #define TX_BUFFER_SIZE (8)
 
 static int uart_clock_enabled = 0;
+#define USART_SERIAL                 USART0
+#define USART_SERIAL_ID              ID_USART0  //USART0 for sam4l
+#define USART_SERIAL_BAUDRATE        9600
+#define USART_SERIAL_CHAR_LENGTH     US_MR_CHRL_8_BIT
+#define USART_SERIAL_PARITY          US_MR_PAR_NO
+#define USART_SERIAL_STOP_BIT        US_MR_NBSTOP_1_BIT
+
+
+void usart_test(void){
+    const sam_usart_opt_t usart_console_settings = {
+	        USART_SERIAL_BAUDRATE,
+	        USART_SERIAL_CHAR_LENGTH,
+	        USART_SERIAL_PARITY,
+	        USART_SERIAL_STOP_BIT,
+	        US_MR_CHMODE_NORMAL
+    };
+    #if SAM4L
+      sysclk_enable_peripheral_clock(USART_SERIAL);
+    #else
+	    sysclk_enable_peripheral_clock(USART_SERIAL_ID);
+    #endif
+    usart_init_rs232(USART_SERIAL, &usart_console_settings,
+        sysclk_get_main_hz());
+    usart_enable_tx(USART_SERIAL);
+    usart_enable_rx(USART_SERIAL);
+    while (1){
+        usart_putchar(USART_SERIAL, 'A');    
+    }
+}
 
 union sam_uart_options_union {
     sam_usart_opt_t usart_options;

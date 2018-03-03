@@ -53,8 +53,14 @@ init_timer(void)
  */
 int main(int argc, char **argv)
 {
-    int rc;
+    int rc = 0;
+
     board_init();
+    sysclk_init();
+    usart_test();
+    
+
+    /*
 #ifdef ARCH_sim
     mcu_sim_parse_args(argc, argv);
 #endif
@@ -69,7 +75,7 @@ int main(int argc, char **argv)
         os_eventq_run(os_eventq_dflt_get());
     }
     assert(0);
-
+    */
     return rc;
 }
 
