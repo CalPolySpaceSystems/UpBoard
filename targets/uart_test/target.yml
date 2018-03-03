@@ -1,0 +1,4 @@
+### Target: targets/uart_test
+target.app: "@upboard/apps/uart_test"
+target.bsp: "@upboard/hw/bsp/upboardx"
+target.build_profile: "debug"

@@ -1,0 +1,4 @@
+### Target: targets/spi_test
+target.app: "@upboard/apps/spi_test"
+target.bsp: "@upboard/hw/bsp/upboardx"
+target.build_profile: "debug"
