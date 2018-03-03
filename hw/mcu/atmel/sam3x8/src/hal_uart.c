@@ -13,6 +13,8 @@
 
 #define TX_BUFFER_SIZE (8)
 
+static int uart_clock_enabled = 0;
+
 union sam_uart_options_union {
     sam_usart_opt_t usart_options;
     sam_uart_opt_t uart_options;
@@ -108,10 +110,13 @@ int hal_uart_init_cbs(int uart, hal_uart_tx_char tx_func,
 int hal_usart_config(hal_uart_t *uart, int32_t speed, uint8_t databits, uint8_t stopbits,
                         enum hal_uart_parity parity, enum hal_uart_flow_ctl flow_ctl){
     uart->options.usart_options.baudrate = speed;
+    if (!uart_clock_enabled){
         sysclk_enable_peripheral_clock(ID_USART0);
-    sysclk_enable_peripheral_clock(ID_USART1);
-    sysclk_enable_peripheral_clock(ID_USART2);
-    sysclk_enable_peripheral_clock(ID_USART3);
+        sysclk_enable_peripheral_clock(ID_USART1);
+        sysclk_enable_peripheral_clock(ID_USART2);
+        sysclk_enable_peripheral_clock(ID_USART3);
+        uart_clock_enabled = 1;
+    }
     pio_set_peripheral(PIOA, PIO_PERIPH_A, (3 << 10));
     pio_pull_up(PIOA, (3 << 10), PIO_PULLUP);
     /* Set char length */

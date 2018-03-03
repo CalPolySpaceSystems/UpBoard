@@ -54,7 +54,7 @@ init_timer(void)
 int main(int argc, char **argv)
 {
     int rc;
-
+    board_init();
 #ifdef ARCH_sim
     mcu_sim_parse_args(argc, argv);
 #endif
