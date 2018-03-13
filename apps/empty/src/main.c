@@ -40,11 +40,10 @@ int main(int argc, char **argv)
 
 
     while(1) {
-        //__asm__("bkpt");
-        test = os_cputime_get32();
-        loops++;
-        //os_time_delay(OS_TICKS_PER_SEC);
-        os_cputime_delay_ticks(1000000);
+        __asm__("bkpt");
+        loops = os_time_get();
+        os_time_delay(OS_TICKS_PER_SEC);
+        //os_cputime_delay_ticks(1000000);
         led_dir = !led_dir;
         hal_gpio_write(LED_BLINK_PIN, led_dir);
     }

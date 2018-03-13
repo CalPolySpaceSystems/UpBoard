@@ -31,3 +31,4 @@ tags
 *.swo
 repos
 .openocd_cmds
+openocd.log

@@ -67,7 +67,11 @@ SECTIONS
     {
         . = ALIGN(4);
         _sfixed = .;
+        __isr_vector = .;
+        __isr_vector_start = .;
         KEEP(*(.vectors .vectors.*))
+        __isr_vector_end = .;
+
         *(.text .text.* .gnu.linkonce.t.*)
         *(.glue_7t) *(.glue_7)
         *(.rodata .rodata* .gnu.linkonce.r.*)
@@ -123,14 +127,13 @@ SECTIONS
     . = ALIGN(4);
     _etext = .;
 
-    .relocate :
+    .vector_relocation :
     {
         . = ALIGN(4);
-        _srelocate = .;
-        *(.data .data.*);
+        __vector_tbl_reloc__ = .;
+        . = . + (__isr_vector_end - __isr_vector_start);
         . = ALIGN(4);
-        _erelocate = .;
-    } > RAM AT > FLASH
+    } > RAM
 
     /* .bss section which is used for uninitialized data */
     .bss (NOLOAD) :

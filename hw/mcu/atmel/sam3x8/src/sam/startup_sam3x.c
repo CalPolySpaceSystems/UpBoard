@@ -47,6 +47,7 @@
 #include "exceptions.h"
 #include "sam3xa.h"
 #include "system_sam3x.h"
+#include "bsp/cmsis_nvic.h"
 
 /* Initialize segments */
 extern uint32_t _sfixed;
@@ -61,7 +62,7 @@ extern uint32_t _sstack;
 extern uint32_t __StackTop;
 
 /** \cond DOXYGEN_SHOULD_SKIP_THIS */
-int main(void);
+void _start(void);
 /** \endcond */
 
 void __libc_init_array(void);
@@ -191,17 +192,19 @@ IntFunc exception_table[] = {
  */
 void Reset_Handler(void)
 {
-	uint32_t *pSrc, *pDest;
+	//uint32_t *pSrc, *pDest;
 
 	/* Initialize the relocate segment */
-	pSrc = &_etext;
-	pDest = &_srelocate;
+	// pSrc = &_etext;
+	// pDest = &_srelocate;
 
-	if (pSrc != pDest) {
-		for (; pDest < &_erelocate;) {
-			*pDest++ = *pSrc++;
-		}
-	}
+	// if (pSrc != pDest) {
+	// 	for (; pDest < &_erelocate;) {
+	// 		*pDest++ = *pSrc++;
+	// 	}
+	// }
+
+	uint32_t *pDest;
 
 	/* Clear the zero segment */
 	for (pDest = &_szero; pDest < &_ezero;) {
@@ -209,12 +212,14 @@ void Reset_Handler(void)
 	}
 
 	/* Set the vector table base address */
-	pSrc = (uint32_t *) & _sfixed;
-	SCB->VTOR = ((uint32_t) pSrc & SCB_VTOR_TBLOFF_Msk);
+	// pSrc = (uint32_t *) & _sfixed;
+	// SCB->VTOR = ((uint32_t) pSrc & SCB_VTOR_TBLOFF_Msk);
 
-	if (((uint32_t) pSrc >= IRAM0_ADDR) && ((uint32_t) pSrc < NFC_RAM_ADDR)) {
-		SCB->VTOR |= 1 << SCB_VTOR_TBLBASE_Pos;
-	}
+	// if (((uint32_t) pSrc >= IRAM0_ADDR) && ((uint32_t) pSrc < NFC_RAM_ADDR)) {
+	// 	SCB->VTOR |= 1 << SCB_VTOR_TBLBASE_Pos;
+	// }
+
+	NVIC_Relocate();
 
 	/* Initialize the C library */
 	__libc_init_array();
@@ -223,8 +228,10 @@ void Reset_Handler(void)
 	/* Initialize the SAM3 system */
 	SystemInit();
 
+	__asm__("bkpt");
+
 	/* Branch to main function */
-	main();
+	_start();
 
 	/* Infinite loop */
 	while (1);
