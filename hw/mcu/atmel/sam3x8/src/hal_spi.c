@@ -17,14 +17,10 @@
  * under the License.
  */
 
-/*
-struct hal_spi_settings {
-    uint8_t         data_mode;
-    uint8_t         data_order;
-    uint8_t         word_size;
-    uint32_t        baudrate;		(baudrate in kHz)
-};
-*/
+#include <hal/hal_spi.h>
+#include <stdint.h>
+#include <spi.h>
+#include <pio.h>
 
 /*
  * Struct to hold other SPI settings specific to the SAM3X
@@ -36,7 +32,7 @@ struct spi_cfg {
     uint8_t loopback;
     /* TODO: Include settings for the builtin chip selects */
 
-}
+};
 
 /**
  * Initialize the SPI, given by spi_num.
@@ -51,7 +47,8 @@ struct spi_cfg {
  */
 int hal_spi_init(int spi_num, void *cfg, uint8_t spi_type){
 
-    if spi_num{
+    if (spi_num){
+
         return -1;
     }
     
@@ -66,12 +63,12 @@ int hal_spi_init(int spi_num, void *cfg, uint8_t spi_type){
 
     }
 
-    // Master mode
+    // Master modestruct spi_cfg
     else{
         spi_set_master_mode(SPI0);
 
         // Toggle fault detect
-        if (cfg->fault_detect){
+        if (((struct spi_cfg *)cfg)->fault_detect){
             spi_enable_mode_fault_detect(SPI0);
         }
         else{
@@ -79,8 +76,9 @@ int hal_spi_init(int spi_num, void *cfg, uint8_t spi_type){
         }
 
         // Toggle loopback
-        if (cfg->loopback){
+        if (((struct spi_cfg *)cfg)->loopback){
             spi_enable_loopback(SPI0);
+        }
         else{
             spi_disable_loopback(SPI0);
         }
@@ -89,12 +87,12 @@ int hal_spi_init(int spi_num, void *cfg, uint8_t spi_type){
         /*
 	    spi_set_fixed_peripheral_select(SPI0);p_spi
 	    spi_disable_peripheral_select_decode(SPI0);
-	    spi_set_delay_between_chip_select(SPI0, cfg->cs_delay);
+	    spi_set_dspi_enable(SPI0);elay_between_chip_select(SPI0, cfg->cs_delay);
         */
     }
 
     spi_set_writeprotect(SPI0,1);
-
+    return 0;
 }
 
 /**
@@ -111,13 +109,44 @@ int hal_spi_init(int spi_num, void *cfg, uint8_t spi_type){
  */
 int hal_spi_config(int spi_num, struct hal_spi_settings *psettings){
 
-    
+    int rc;
     spi_set_writeprotect(SPI0,0);
 
-    
+    // Set clock polarity and active level from data mode
+    switch (psettings->data_mode) {
+
+        case HAL_SPI_MODE0: 
+            spi_set_clock_polarity(SPI0,0,0);
+            spi_set_clock_phase(SPI0,0,0);
+
+        case 2:
+            spi_set_clock_polarity(SPI0,0,0);
+            spi_set_clock_phase(SPI0,0,1);
+
+        case 3:
+            spi_set_clock_polarity(SPI0,0,1);
+            spi_set_clock_phase(SPI0,0,0);
+
+        case 4:
+            spi_set_clock_polarity(SPI0,0,1);
+            spi_set_clock_phase(SPI0,0,1);
+
+        default:
+            spi_set_writeprotect(SPI0,1);
+            return -1;
+
+    }
+
+    // Set word size (bits per transfer)
+    spi_set_bits_per_transfer(SPI0,0,psettings->word_size);
+
+    // Set baudrate
+    int16_t div = spi_calc_baudrate_div(psettings->baudrate,84000000);
+    rc = spi_set_baudrate_div(SPI0,0,div);
 
     spi_set_writeprotect(SPI0,1);
 
+    return rc;
 }
 
 
@@ -132,7 +161,7 @@ int hal_spi_config(int spi_num, struct hal_spi_settings *psettings){
  *
  * @param spi_num   SPI interface on which to set callback
  * @param txrx      Callback function
- * @param arg       Argument to be passed to callback function
+ * @param arg       Argument to be passed to callback function    
  *
  * @return int 0 on success, non-zero error code on failure.
  */
@@ -156,8 +185,8 @@ int hal_spi_enable(int spi_num){
     spi_enable(SPI0);
 
     spi_set_writeprotect(SPI0,1);
-);
 
+    return 0;
 }
 
 /**
@@ -179,6 +208,8 @@ int hal_spi_disable(int spi_num){
 
     spi_set_writeprotect(SPI0,1);
 
+    return 0;
+
 }
 
 /**
@@ -196,15 +227,18 @@ int hal_spi_disable(int spi_num){
  */
 uint16_t hal_spi_tx_val(int spi_num, uint16_t val){
 
+    spi_set_writeprotect(SPI0,0);
     
     uint8_t cs = 0;
     uint16_t data;
 
     spi_write(SPI0,val,cs,1);
 
-    if (spi_read(SPI0,*data,NULL)){
+    if (spi_read(SPI0,&data,NULL)){
         return 0;
     }
+
+    spi_set_writeprotect(SPI0,1);
 
     return data;
 
@@ -229,29 +263,36 @@ uint16_t hal_spi_tx_val(int spi_num, uint16_t val){
  * @param spi_num   SPI interface to use
  * @param txbuf     Pointer to buffer where values to transmit are stored.
  * @param rxbuf     Pointer to buffer to store values received from peer.
- * @param cnt       Number of 8-bit or 16-bit vastores the lues to be transferred.
+ * @param cnt       Number of 8-bit or 16-bit values to be transferred.
  *
  * @return int 0 on success, non-zero error code on failure.
  */
-int hal_spi_txrx(int spi_num, void *txbuf, void *rxbuf, int cnt){
+int hal_spi_txrx(int spi_num, void *txbuf, void *rxbuf, int cnt);
+
+/*
+{
 
     // Send data until txbuf is empty
-    for int (i=0;i<(cnt-2);i++){
+    for (int i=0;i<(cnt-1);i++){
 
-        spi_write((txbuf[i])
+        spi_write(SPI0,((uint8_t *)txbuf)[i]);
 
     }
     
     // Send last item, is last transfer
-    spi_write((txbuf[i])
+    int rc = spi_write(SPI0,txbuf[(cnt-1)]);
 
     // Read values in to rx buffer
 
+
+
     // if timeout, return what you have
-
+    return rc;
 }
+*/
 
-/**
+
+/*
  * Non-blocking interface to send a buffer and store received values. Can be
  * used for both master and slave SPI types. The user must configure the
  * callback (using hal_spi_set_txrx_cb); the txrx callback is executed at
@@ -292,9 +333,7 @@ int hal_spi_txrx_noblock(int spi_num, void *txbuf, void *rxbuf, int cnt);
  *
  * @return int 0 on success, non-zero error code on failure.
  */
-int hal_spi_slave_set_def_tx_val(int spi_num, uint16_t val){
-    
-}
+int hal_spi_slave_set_def_tx_val(int spi_num, uint16_t val);
 
 /**
  * This aborts the current transfer but keeps the spi enabled.
@@ -308,6 +347,5 @@ int hal_spi_slave_set_def_tx_val(int spi_num, uint16_t val){
 int hal_spi_abort(int spi_num);
 
 /** Utility functions; defined once for all MCUs. */
-int hal_spi_data_mode_breakout(uint8_t data_mode,
-                               int *out_cpol, int *out_cpha);
+int hal_spi_data_mode_breakout(uint8_t data_mode,int *out_cpol, int *out_cpha);
 

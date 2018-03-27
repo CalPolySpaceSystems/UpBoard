@@ -5,12 +5,11 @@
 #include <sysinit/sysinit.h>
 #include <os/os.h>
 #include <hal/hal_uart.h>
+#include <bsp/bsp.h>
 
 #ifdef ARCH_sim
 #include "mcu/mcu_sim.h"
 #endif
-
-#define LED_BLINK_PIN (59)
 
 /**
  * main
@@ -34,19 +33,24 @@ int main(int argc, char **argv)
     hal_bsp_init();
     sysinit();
 
-    hal_gpio_init_out(LED_BLINK_PIN, 1);
+    hal_gpio_init_out(LED_1_PIN, 0);
+    hal_gpio_init_out(LED_2_PIN, 0);
+    hal_gpio_init_out(LED_FAULT_PIN, 0);
+    hal_gpio_init_out(LS_PIN, 0);
     led_dir = 1;
     loops = 0;
 
+    int f_test = 1/loops;
 
     while(1) {
         //__asm__("bkpt");
         test = os_cputime_get32();
         loops++;
+        f_test++;
         //os_time_delay(OS_TICKS_PER_SEC);
         os_cputime_delay_ticks(1000000);
         led_dir = !led_dir;
-        hal_gpio_write(LED_BLINK_PIN, led_dir);
+        hal_gpio_write(LED_1_PIN, led_dir);
     }
 
     assert(0);

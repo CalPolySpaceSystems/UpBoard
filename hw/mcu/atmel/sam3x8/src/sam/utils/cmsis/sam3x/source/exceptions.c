@@ -55,6 +55,7 @@
  */
 
 #include "exceptions.h"
+#include <pio.h>
 
 /* @cond 0 */
 /**INDENT-OFF**/
@@ -67,7 +68,7 @@ extern "C" {
 #ifdef __GNUC__
 /* Cortex-M3 core handlers */
 void NMI_Handler        ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
-void HardFault_Handler  ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+//void HardFault_Handler  ( void ) __attribute__ ((weak, alias("HardFault_Handler")));
 void MemManage_Handler  ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void BusFault_Handler   ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void UsageFault_Handler ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
@@ -229,9 +230,19 @@ void CAN1_Handler       ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
  */
 void Dummy_Handler(void)
 {
+	pio_set_output(PIOB,(1<<27),1,0,0);
 	while (1) {
 	}
 }
+
+/* Hard Fault Handler */
+void HardFault_Handler(void)
+{
+	pio_set_output(PIOB,(1<<27),1,0,0);
+	while (1) {
+	}
+}
+
 
 /* @cond 0 */
 /**INDENT-OFF**/

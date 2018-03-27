@@ -21,6 +21,7 @@ pkg.cflags:
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/efc"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/pmc"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/wdt"
+    - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/spi"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/pio"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/uart"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/usart"
