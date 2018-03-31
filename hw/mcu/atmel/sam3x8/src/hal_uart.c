@@ -22,6 +22,8 @@ static int uart_clock_enabled = 0;
 #define USART_SERIAL_STOP_BIT        US_MR_NBSTOP_1_BIT
 
 
+void usart_test(void);
+
 void usart_test(void){
     const sam_usart_opt_t usart_console_settings = {
 	        USART_SERIAL_BAUDRATE,

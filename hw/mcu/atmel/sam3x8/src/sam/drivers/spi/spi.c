@@ -238,6 +238,7 @@ spi_status_t spi_read(Spi *p_spi, uint16_t *us_data, uint8_t *p_pcs)
 
 	while (!(p_spi->SPI_SR & SPI_SR_RDRF)) {
 		if (!timeout--) {
+			__asm__("bkpt");
 			return SPI_ERROR_TIMEOUT;
 		}
 	}

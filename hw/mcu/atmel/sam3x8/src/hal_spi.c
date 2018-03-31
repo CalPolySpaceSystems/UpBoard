@@ -18,7 +18,12 @@
  */
 
 #include <hal/hal_spi.h>
+#include <hal/hal_bsp.h>
+
 #include <stdint.h>
+
+#include <bsp/bsp.h>
+
 #include <spi.h>
 #include <pio.h>
 
@@ -26,15 +31,28 @@
  * Struct to hold other SPI settings specific to the SAM3X
  *
  */ 
-struct spi_cfg {
 
-    uint8_t fault_detect;
-    uint8_t loopback;
-    /* TODO: Include settings for the builtin chip selects */
+typedef struct hal_spi_cfg{
+
+    bool fault_detect;
+    bool loopback;
+    uint32_t cs_delay;
+    // TODO: Include settings for the builtin chip selects
+
+} hal_spi_cfg_t; 
+hal_spi_cfg_t hal_spi0_cfg;
+
+void spi_hw_cfg(int spi_num, uint8_t fault_detect_en, uint8_t loopback_en, uint32_t cs_delay_cyc){
+
+    if (~spi_num){
+        hal_spi0_cfg.fault_detect = fault_detect_en;
+        hal_spi0_cfg.loopback = loopback_en;
+        hal_spi0_cfg.cs_delay = cs_delay_cyc;
+    };
 
 };
 
-/**
+/*
  * Initialize the SPI, given by spi_num.
  *
  * @param spi_num The number of the SPI to initialize
@@ -59,16 +77,16 @@ int hal_spi_init(int spi_num, void *cfg, uint8_t spi_type){
     spi_reset(SPI0);
 
     // Slave mode
-    if (spi_type){
-
+    if (spi_type == HAL_SPI_TYPE_SLAVE){
+        return -1;
     }
 
-    // Master modestruct spi_cfg
-    else{
+    // Master mode
+    else if (spi_type == HAL_SPI_TYPE_MASTER){
         spi_set_master_mode(SPI0);
 
         // Toggle fault detect
-        if (((struct spi_cfg *)cfg)->fault_detect){
+        if (((hal_spi_cfg_t *)cfg)->fault_detect){
             spi_enable_mode_fault_detect(SPI0);
         }
         else{
@@ -76,22 +94,26 @@ int hal_spi_init(int spi_num, void *cfg, uint8_t spi_type){
         }
 
         // Toggle loopback
-        if (((struct spi_cfg *)cfg)->loopback){
+        if (((hal_spi_cfg_t *)cfg)->loopback){
             spi_enable_loopback(SPI0);
         }
         else{
             spi_disable_loopback(SPI0);
         }
-
+        
         /* TODO: If statements for builtin CS settings */
-        /*
-	    spi_set_fixed_peripheral_select(SPI0);p_spi
+        
+	    spi_set_fixed_peripheral_select(SPI0);
 	    spi_disable_peripheral_select_decode(SPI0);
-	    spi_set_dspi_enable(SPI0);elay_between_chip_select(SPI0, cfg->cs_delay);
-        */
+	    spi_set_delay_between_chip_select(SPI0, (((hal_spi_cfg_t *)cfg)->cs_delay));
+        
     }
 
-    spi_set_writeprotect(SPI0,1);
+    else{
+        return -1;
+    }
+
+    //spi_set_writeprotect(SPI0,1);
     return 0;
 }
 
@@ -110,7 +132,7 @@ int hal_spi_init(int spi_num, void *cfg, uint8_t spi_type){
 int hal_spi_config(int spi_num, struct hal_spi_settings *psettings){
 
     int rc;
-    spi_set_writeprotect(SPI0,0);
+    //spi_set_writeprotect(SPI0,0);
 
     // Set clock polarity and active level from data mode
     switch (psettings->data_mode) {
@@ -144,7 +166,7 @@ int hal_spi_config(int spi_num, struct hal_spi_settings *psettings){
     int16_t div = spi_calc_baudrate_div(psettings->baudrate,84000000);
     rc = spi_set_baudrate_div(SPI0,0,div);
 
-    spi_set_writeprotect(SPI0,1);
+    //spi_set_writeprotect(SPI0,1);
 
     return rc;
 }
@@ -179,12 +201,12 @@ int hal_spi_set_txrx_cb(int spi_num, hal_spi_txrx_cb txrx_cb, void *arg);
 int hal_spi_enable(int spi_num){
 
 
-    spi_set_writeprotect(SPI0,0);
+    //spi_set_writeprotect(SPI0,0);
 
     // enable clock
     spi_enable(SPI0);
 
-    spi_set_writeprotect(SPI0,1);
+    //spi_set_writeprotect(SPI0,1);
 
     return 0;
 }
@@ -202,11 +224,11 @@ int hal_spi_enable(int spi_num){
  */
 int hal_spi_disable(int spi_num){
 
-    spi_set_writeprotect(SPI0,0);
+    //spi_set_writeprotect(SPI0,0);
 
     spi_disable(SPI0);
 
-    spi_set_writeprotect(SPI0,1);
+    //spi_set_writeprotect(SPI0,1);
 
     return 0;
 
@@ -227,7 +249,7 @@ int hal_spi_disable(int spi_num){
  */
 uint16_t hal_spi_tx_val(int spi_num, uint16_t val){
 
-    spi_set_writeprotect(SPI0,0);
+    //spi_set_writeprotect(SPI0,0);
     
     uint8_t cs = 0;
     uint16_t data;
@@ -238,7 +260,7 @@ uint16_t hal_spi_tx_val(int spi_num, uint16_t val){
         return 0;
     }
 
-    spi_set_writeprotect(SPI0,1);
+    //spi_set_writeprotect(SPI0,1);
 
     return data;
 
@@ -267,30 +289,26 @@ uint16_t hal_spi_tx_val(int spi_num, uint16_t val){
  *
  * @return int 0 on success, non-zero error code on failure.
  */
-int hal_spi_txrx(int spi_num, void *txbuf, void *rxbuf, int cnt);
-
-/*
+int hal_spi_txrx(int spi_num, void *txbuf, void *rxbuf, int cnt)
 {
+    int rc = 0;
 
     // Send data until txbuf is empty
     for (int i=0;i<(cnt-1);i++){
 
-        spi_write(SPI0,((uint8_t *)txbuf)[i]);
+        spi_write(SPI0,((uint16_t *)txbuf)[i],0,0);
 
     }
     
     // Send last item, is last transfer
-    int rc = spi_write(SPI0,txbuf[(cnt-1)]);
+    spi_write(SPI0,((uint16_t *)txbuf)[cnt-1],0,1);
 
     // Read values in to rx buffer
-
-
+    spi_read(SPI0, (uint16_t *)rxbuf, NULL);
 
     // if timeout, return what you have
     return rc;
 }
-*/
-
 
 /*
  * Non-blocking interface to send a buffer and store received values. Can be

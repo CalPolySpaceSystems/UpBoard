@@ -1,10 +1,11 @@
 #include <assert.h>
 #include <string.h>
+
 #include <hal/hal_bsp.h>
 #include <hal/hal_gpio.h>
+
 #include <sysinit/sysinit.h>
 #include <os/os.h>
-#include <hal/hal_uart.h>
 
 #ifdef ARCH_sim
 #include "mcu/mcu_sim.h"
@@ -38,6 +39,7 @@ int main(int argc, char **argv)
     led_dir = 1;
     loops = 0;
 
+    __asm__("bkpt");
 
     while(1) {
         //__asm__("bkpt");

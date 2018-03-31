@@ -1,10 +1,15 @@
 #include <assert.h>
 #include <string.h>
+
 #include <hal/hal_bsp.h>
 #include <hal/hal_gpio.h>
+#include <hal/hal_uart.h>
+#include <hal/hal_spi.h>
+#include <hal/hal_i2c.h>
+
 #include <sysinit/sysinit.h>
 #include <os/os.h>
-#include <hal/hal_uart.h>
+
 #include <bsp/bsp.h>
 
 #ifdef ARCH_sim
@@ -14,7 +19,7 @@
 /**
  * main
  *
- * This application does nothing, it's primary goal is to test compiling with the sam3x8 mcu
+ * This application tests the timing functionality of mynewt on the SAM3X8E
  *
  * @return int NOTE: this function should never return!
  */
@@ -33,20 +38,15 @@ int main(int argc, char **argv)
     hal_bsp_init();
     sysinit();
 
-    hal_gpio_init_out(LED_1_PIN, 0);
-    hal_gpio_init_out(LED_2_PIN, 0);
-    hal_gpio_init_out(LED_FAULT_PIN, 0);
-    hal_gpio_init_out(LS_PIN, 0);
     led_dir = 1;
     loops = 0;
 
-    int f_test = 1/loops;
-
+    __asm__("bkpt");
+    
     while(1) {
         //__asm__("bkpt");
         test = os_cputime_get32();
         loops++;
-        f_test++;
         //os_time_delay(OS_TICKS_PER_SEC);
         os_cputime_delay_ticks(1000000);
         led_dir = !led_dir;

@@ -1,5 +1,5 @@
 ### Package: targets/i2c_test
 
 syscfg.vals:
-    BSP_UPBOARD_X: "1"
+    BSP_UPBOARD_X_R1: "1"
     BOOT_LOADER: "1"

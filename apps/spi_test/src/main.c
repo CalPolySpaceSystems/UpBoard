@@ -1,19 +1,17 @@
 #include <assert.h>
 #include <string.h>
-#include <hal/hal_bsp.h>
-#include <hal/hal_gpio.h>
+
 #include <sysinit/sysinit.h>
 #include <os/os.h>
-#include <hal/hal_spi.h>
+#include <bsp/bsp.h>
 
+#include <hal/hal_bsp.h>
+#include <hal/hal_gpio.h>
+#include <hal/hal_spi.h>
 
 #ifdef ARCH_sim
 #include "mcu/mcu_sim.h"
 #endif
-
-#define SPI_0 0
-
-#define LED_BLINK_PIN (59)
 
 /**
  * main
@@ -26,10 +24,8 @@ volatile int led_dir;
 volatile int loops;
 volatile int test;
 
-uint8_t spi_rx;
-uint8_t spi_tx = 0b10011101;
-
-//struct spi_cfg spicfg;
+uint8_t spi_rx[3];
+uint8_t spi_tx = 0x9F;
 
 int main(int argc, char **argv)
 {
@@ -41,29 +37,42 @@ int main(int argc, char **argv)
 
     hal_bsp_init();
     sysinit();
-    hal_spi_init(SPI_0,NULL,0);
 
-    hal_gpio_init_out(LED_BLINK_PIN, 0);
+    // Init Flash CS pin
+    hal_gpio_init_out(FLASH_CS_PIN,1);
 
-    //hal_spi_config();
+    spi_hw_cfg(HAL_SPI_0,false,false,0);
+
+    // Init SPI
+    hal_spi_init(HAL_SPI_0, NULL,0);
+
+    // Configure SPI
+
     __asm__("bkpt");
-    hal_spi_enable(SPI_0);
+    //hal_spi_config();
+    
+
+    // Enable SPI
+    hal_spi_enable(0);
 
     while(1) {
+
+        // Get the transmission
+        hal_gpio_write(FLASH_CS_PIN, 0);
+        
         __asm__("bkpt");
-        spi_rx = hal_spi_tx_val(SPI_0,spi_tx);
 
+        os_cputime_delay_ticks(5);
 
-        //__asm__("bkpt");
-        if(spi_rx == spi_tx){
-            hal_gpio_write(LED_BLINK_PIN,1);
+        hal_spi_txrx(HAL_SPI_0,&spi_tx,&spi_rx,1);
 
-        }
+        os_cputime_delay_ticks(5);
 
-        os_cputime_delay_ticks(1000000);
-        hal_gpio_write(LED_BLINK_PIN,0);
-        spi_rx = 0;
-        os_cputime_delay_ticks(1000000);
+        hal_gpio_write(FLASH_CS_PIN, 1);
+
+        os_cputime_delay_ticks(2000000);
+        __asm__("bkpt");
+
     }
 
     assert(0);

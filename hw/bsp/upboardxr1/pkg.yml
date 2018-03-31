@@ -1,0 +1,14 @@
+pkg.name: "hw/bsp/upboardxr1"
+pkg.type: bsp
+pkg.repository: https://github.com/CalPolySpaceSystems/UpBoard
+
+pkg.deps:
+    - hw/mcu/atmel/sam3x8
+    - '@apache-mynewt-core/kernel/os'
+    - "@apache-mynewt-core/hw/hal"
+    - "@apache-mynewt-core/libc/baselibc"
+
+pkg.cflags:
+    - -mthumb
+    - -D__SAM3X8E__
+    - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/utils/cmsis/sam3x/include/"
