@@ -1,4 +1,4 @@
-#ifndef _H_SAM3Xi_HAL_
+#ifndef _H_SAM3X8_HAL_
 #define _H_SAM3X8_HAL_
 
 #ifdef __cplusplus

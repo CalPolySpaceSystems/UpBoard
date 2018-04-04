@@ -3,11 +3,15 @@
 
 #include "mcu/sam3x8.h"
 #include "mcu/sam3x8_hal.h"
-#include "hal/hal_bsp.h"
+
 #include "bsp/bsp.h"
+
+#include "hal/hal_bsp.h"
 #include "hal/hal_flash.h"
 #include "hal/hal_timer.h"
 #include "hal/hal_gpio.h"
+#include "hal/hal_i2c.h"
+
 #include "syscfg/syscfg.h"
 #include "sysinit/sysinit.h"
 
@@ -37,8 +41,16 @@ hal_bsp_core_dump(int *area_cnt)
     return dump_cfg;
 }
 
-uint32_t
-hal_bsp_get_nvic_priority(int irq_num, uint32_t pri)
+/* I2C Struct 
+static twi_options_t i2c_cfg0 = {
+    .master_clk = 84000000;
+    .speed = 9600;
+    .chip = 0;
+    .smbus = 0;
+};
+*/
+
+uint32_t hal_bsp_get_nvic_priority(int irq_num, uint32_t pri)
 {
     /* Add any interrupt priorities configured by the bsp here */
     return pri;

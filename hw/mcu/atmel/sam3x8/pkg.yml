@@ -17,6 +17,7 @@ pkg.cflags:
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/utils/cmsis/sam3x/source"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/utils/header_files"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/utils/preprocessor"
+    - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/twi"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/efc"
     - "-I@upboard/hw/mcu/atmel/sam3x8/src/sam/drivers/pmc"

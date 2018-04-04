@@ -230,7 +230,7 @@ void CAN1_Handler       ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
  */
 void Dummy_Handler(void)
 {
-	pio_set_output(PIOB,(1<<27),1,0,0);
+	//pio_set_output(PIOB,(1<<27),1,0,0);
 	while (1) {
 	}
 }
@@ -238,7 +238,7 @@ void Dummy_Handler(void)
 /* Hard Fault Handler */
 void HardFault_Handler(void)
 {
-	pio_set_output(PIOB,(1<<27),1,0,0);
+	//pio_set_output(PIOB,(1<<27),1,0,0);
 	while (1) {
 	}
 }
