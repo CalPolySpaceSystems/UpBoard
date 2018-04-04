@@ -31,3 +31,5 @@ tags
 *.swo
 repos
 .openocd_cmds
+.log
+.vscode
